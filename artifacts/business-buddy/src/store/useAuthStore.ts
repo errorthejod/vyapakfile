@@ -22,7 +22,8 @@ interface AuthState {
   adminLogin: (password: string) => boolean;
   adminLogout: () => void;
   changeAdminPassword: (oldPass: string, newPass: string) => boolean;
-  createUser: (name: string, businessName: string) => AppUser;
+  createUser: (name: string, businessName: string, customPin?: string) => AppUser;
+  updateUserPin: (id: string, newPin: string) => void;
   deleteUser: (id: string) => void;
   toggleUserActive: (id: string) => void;
 }
@@ -74,10 +75,10 @@ export const useAuthStore = create<AuthState>()(
         return false;
       },
 
-      createUser: (name, businessName) => {
+      createUser: (name, businessName, customPin) => {
         const num = get().nextUserNum;
         const id = `BB${String(num).padStart(3, '0')}`;
-        const pin = String(Math.floor(1000 + Math.random() * 9000));
+        const pin = customPin?.trim() || String(Math.floor(1000 + Math.random() * 9000));
         const newUser: AppUser = {
           id,
           name,
@@ -89,6 +90,11 @@ export const useAuthStore = create<AuthState>()(
         set(s => ({ users: [...s.users, newUser], nextUserNum: num + 1 }));
         return newUser;
       },
+
+      updateUserPin: (id, newPin) =>
+        set(s => ({
+          users: s.users.map(u => u.id === id ? { ...u, pin: newPin } : u),
+        })),
 
       deleteUser: (id) => set(s => ({ users: s.users.filter(u => u.id !== id) })),
 
