@@ -59,7 +59,7 @@ const emptyUserData = (): UserData => ({
 
 interface DataStore {
   allData: Record<string, UserData>;
-  initUser: (userId: string, isDemo?: boolean) => void;
+  initUser: (userId: string, isDemo?: boolean, businessName?: string) => void;
   addParty: (userId: string, party: Party) => void;
   updateParty: (userId: string, id: string, data: Partial<Party>) => void;
   deleteParty: (userId: string, id: string) => void;
@@ -75,12 +75,26 @@ export const useDataStore = create<DataStore>()(
     (set, get) => ({
       allData: { BB001: sampleData },
 
-      initUser: (userId, isDemo = false) => {
+      initUser: (userId, isDemo = false, businessName) => {
         if (!get().allData[userId]) {
+          const userData = isDemo ? sampleData : emptyUserData();
+          if (!isDemo && businessName) {
+            userData.shopInfo.name = businessName;
+          }
           set(s => ({
             allData: {
               ...s.allData,
-              [userId]: isDemo ? sampleData : emptyUserData(),
+              [userId]: userData,
+            },
+          }));
+        } else if (businessName && get().allData[userId]?.shopInfo?.name === 'My Business') {
+          set(s => ({
+            allData: {
+              ...s.allData,
+              [userId]: {
+                ...s.allData[userId],
+                shopInfo: { ...s.allData[userId].shopInfo, name: businessName },
+              },
             },
           }));
         }

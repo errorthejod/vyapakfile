@@ -34,7 +34,7 @@ export default function Login() {
     const success = loginByName(name.trim(), pin.trim());
     if (success) {
       const user = users.find(u => u.name.toLowerCase() === name.trim().toLowerCase());
-      if (user) initUser(user.id);
+      if (user) initUser(user.id, false, user.businessName);
       toast.success("Login successful!");
       navigate("/", { replace: true });
     } else {
