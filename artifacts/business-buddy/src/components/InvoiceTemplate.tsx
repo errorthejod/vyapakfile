@@ -50,12 +50,15 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
             {invoice.partyAddress && <p style={{ fontSize: '12px', margin: '2px 0', color: '#555' }}>{invoice.partyAddress}</p>}
             {invoice.partyGst && <p style={{ fontSize: '12px', margin: '2px 0' }}>GSTIN: {invoice.partyGst}</p>}
           </div>
-          <div style={{ border: '1px solid #e0e0e0', borderRadius: '6px', padding: '10px 14px', backgroundColor: '#f8f9ff', minWidth: '160px' }}>
+          <div style={{ border: '1px solid #e0e0e0', borderRadius: '6px', padding: '10px 14px', backgroundColor: '#f8f9ff', minWidth: '180px' }}>
             <p style={{ fontWeight: 'bold', fontSize: '11px', marginBottom: '5px', color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Invoice Details</p>
             <table style={{ fontSize: '12px', borderSpacing: 0 }}>
               <tbody>
-                <tr><td style={{ paddingRight: '10px', color: '#666' }}>Invoice No</td><td style={{ fontWeight: '600' }}>{invoice.invoiceNumber}</td></tr>
+                <tr><td style={{ paddingRight: '10px', color: '#666' }}>Bill No</td><td style={{ fontWeight: '600' }}>{invoice.invoiceNumber}</td></tr>
                 <tr><td style={{ paddingRight: '10px', color: '#666' }}>Date</td><td style={{ fontWeight: '600' }}>{new Date(invoice.date).toLocaleDateString('en-IN')}</td></tr>
+                {invoice.invoiceYear && (
+                  <tr><td style={{ paddingRight: '10px', color: '#666' }}>Year</td><td style={{ fontWeight: '600' }}>{invoice.invoiceYear}</td></tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -105,6 +108,12 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
                 <td style={{ padding: '6px 12px', fontSize: '12px', color: '#666' }}>SGST</td>
                 <td style={{ padding: '6px 12px', fontSize: '12px', textAlign: 'right' }}>₹{invoice.totalSgst.toFixed(2)}</td>
               </tr>
+              {(invoice.igst ?? 0) > 0 && (
+                <tr style={{ borderBottom: '1px solid #e8e8e8' }}>
+                  <td style={{ padding: '6px 12px', fontSize: '12px', color: '#666' }}>IGST</td>
+                  <td style={{ padding: '6px 12px', fontSize: '12px', textAlign: 'right' }}>₹{(invoice.igst ?? 0).toFixed(2)}</td>
+                </tr>
+              )}
               <tr style={{ backgroundColor: '#1e3a8a', color: 'white' }}>
                 <td style={{ padding: '9px 12px', fontSize: '14px', fontWeight: 'bold' }}>Total Amount</td>
                 <td style={{ padding: '9px 12px', fontSize: '14px', fontWeight: 'bold', textAlign: 'right' }}>₹{invoice.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>

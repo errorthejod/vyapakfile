@@ -33,6 +33,7 @@ export interface InvoiceItem {
 export interface Invoice {
   id: string;
   invoiceNumber: string;
+  invoiceYear?: string;
   date: string;
   partyId: string;
   partyName: string;
@@ -43,6 +44,7 @@ export interface Invoice {
   subtotal: number;
   totalCgst: number;
   totalSgst: number;
+  igst?: number;
   totalAmount: number;
   type: 'sale' | 'purchase';
   createdAt: string;

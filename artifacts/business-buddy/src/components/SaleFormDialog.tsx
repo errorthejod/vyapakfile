@@ -12,6 +12,13 @@ import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
+function getFinancialYear(dateStr: string): string {
+  const d = new Date(dateStr);
+  const month = d.getMonth() + 1;
+  const year = d.getFullYear();
+  return month >= 4 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
+}
+
 const SuggestionInput = ({
   value,
   onChange,
@@ -122,12 +129,6 @@ const calcFromAmount = (item: InvoiceItem): InvoiceItem => {
   return { ...item, rate, cgst: gstAmount / 2, sgst: gstAmount / 2 };
 };
 
-const defaultForm = () => ({
-  partyId: "", partyName: "", partyAddress: "", partyPhone: "", partyGst: "",
-  date: new Date().toISOString().split("T")[0],
-  invoiceItems: [emptyItem()],
-});
-
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -135,13 +136,27 @@ interface Props {
 
 export function SaleFormDialog({ open, onClose }: Props) {
   const { parties, items, invoices, addInvoice, shopInfo } = useStore();
-  const [form, setForm] = useState(defaultForm());
   const [savedInvoice, setSavedInvoice] = useState<Invoice | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
 
-  const partySuggestions = parties.map((p) => ({
-    label: p.name, id: p.id, phone: p.phone, address: p.address, gst: p.gst,
-  }));
+  const getNextInvoiceNum = (offset = 0) => {
+    const count = invoices.filter((i) => i.type === "sale").length + 1 + offset;
+    return `INV-${String(count).padStart(3, "0")}`;
+  };
+
+  const makeDefaultForm = () => {
+    const today = new Date().toISOString().split("T")[0];
+    return {
+      partyId: "", partyName: "", partyAddress: "", partyPhone: "", partyGst: "",
+      date: today,
+      invoiceItems: [emptyItem()],
+      igst: 0,
+      invoiceYear: getFinancialYear(today),
+      invoiceNumber: getNextInvoiceNum(),
+    };
+  };
+
+  const [form, setForm] = useState(makeDefaultForm());
 
   const updateItem = (index: number, updates: Partial<InvoiceItem>, fromAmount = false) => {
     setForm((prev) => {
@@ -158,16 +173,16 @@ export function SaleFormDialog({ open, onClose }: Props) {
   const subtotal = form.invoiceItems.reduce((s, i) => s + i.amount, 0);
   const totalCgst = form.invoiceItems.reduce((s, i) => s + i.cgst, 0);
   const totalSgst = form.invoiceItems.reduce((s, i) => s + i.sgst, 0);
-  const totalAmount = subtotal + totalCgst + totalSgst;
+  const totalAmount = subtotal + totalCgst + totalSgst + form.igst;
 
   const handleSave = () => {
     if (!form.partyName) { toast.error("Please enter customer name"); return; }
     if (form.invoiceItems.some((i) => !i.name || i.amount <= 0)) { toast.error("Please fill all item details"); return; }
 
-    const invNum = `INV-${String(invoices.filter((i) => i.type === "sale").length + 1).padStart(3, "0")}`;
     const invoice: Invoice = {
       id: Date.now().toString(),
-      invoiceNumber: invNum,
+      invoiceNumber: form.invoiceNumber,
+      invoiceYear: form.invoiceYear,
       date: form.date,
       partyId: form.partyId,
       partyName: form.partyName,
@@ -175,14 +190,24 @@ export function SaleFormDialog({ open, onClose }: Props) {
       partyPhone: form.partyPhone,
       partyGst: form.partyGst,
       items: form.invoiceItems,
-      subtotal, totalCgst, totalSgst, totalAmount,
+      subtotal, totalCgst, totalSgst,
+      igst: form.igst,
+      totalAmount,
       type: "sale",
       createdAt: new Date().toISOString(),
     };
     addInvoice(invoice);
-    toast.success(`Invoice ${invNum} saved!`);
+    toast.success(`Invoice ${form.invoiceNumber} saved!`);
     setSavedInvoice(invoice);
-    setForm(defaultForm());
+    const today = new Date().toISOString().split("T")[0];
+    setForm({
+      partyId: "", partyName: "", partyAddress: "", partyPhone: "", partyGst: "",
+      date: today,
+      invoiceItems: [emptyItem()],
+      igst: 0,
+      invoiceYear: getFinancialYear(today),
+      invoiceNumber: getNextInvoiceNum(1),
+    });
   };
 
   const handlePrint = (invoice: Invoice) => {
@@ -229,11 +254,9 @@ export function SaleFormDialog({ open, onClose }: Props) {
 
   const handleClose = () => {
     setSavedInvoice(null);
-    setForm(defaultForm());
+    setForm(makeDefaultForm());
     onClose();
   };
-
-  const invoiceNum = `INV-${String(invoices.filter((i) => i.type === "sale").length + 1).padStart(3, "0")}`;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -270,19 +293,21 @@ export function SaleFormDialog({ open, onClose }: Props) {
                 New Sale Invoice
               </DialogTitle>
               <div className="flex items-center gap-3 text-xs text-primary-foreground/80">
-                <span className="flex items-center gap-1"><Hash className="h-3 w-3" />{invoiceNum}</span>
+                <span className="flex items-center gap-1"><Hash className="h-3 w-3" />{form.invoiceNumber}</span>
               </div>
             </div>
 
             <div className="p-5 space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30">
                 <div className="md:col-span-2">
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1">
                     <User className="h-3 w-3" /> Customer Name *
                   </Label>
                   <SuggestionInput
                     value={form.partyName}
-                    suggestions={partySuggestions}
+                    suggestions={parties.map((p) => ({
+                      label: p.name, id: p.id, phone: p.phone, address: p.address, gst: p.gst,
+                    }))}
                     placeholder="Select or type name"
                     onChange={(val, selected) => {
                       setForm((prev) => ({
@@ -309,13 +334,41 @@ export function SaleFormDialog({ open, onClose }: Props) {
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1">
                     <Calendar className="h-3 w-3" /> Invoice Date
                   </Label>
-                  <Input type="date" value={form.date} onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))} className="text-sm" />
+                  <Input
+                    type="date"
+                    value={form.date}
+                    onChange={(e) => {
+                      const d = e.target.value;
+                      setForm((prev) => ({ ...prev, date: d, invoiceYear: getFinancialYear(d) }));
+                    }}
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Invoice Year</Label>
+                  <Input
+                    value={form.invoiceYear}
+                    onChange={(e) => setForm((prev) => ({ ...prev, invoiceYear: e.target.value }))}
+                    placeholder="e.g. 2025-2026"
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                    <Hash className="h-3 w-3" /> Bill No
+                  </Label>
+                  <Input
+                    value={form.invoiceNumber}
+                    onChange={(e) => setForm((prev) => ({ ...prev, invoiceNumber: e.target.value }))}
+                    placeholder="INV-001"
+                    className="text-sm font-medium"
+                  />
                 </div>
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">GSTIN</Label>
                   <Input value={form.partyGst} onChange={(e) => setForm((prev) => ({ ...prev, partyGst: e.target.value }))} placeholder="Optional" className="text-sm" />
                 </div>
-                <div className="md:col-span-5">
+                <div className="md:col-span-6">
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Address</Label>
                   <Input value={form.partyAddress} onChange={(e) => setForm((prev) => ({ ...prev, partyAddress: e.target.value }))} placeholder="Customer address (optional)" className="text-sm" />
                 </div>
@@ -389,7 +442,7 @@ export function SaleFormDialog({ open, onClose }: Props) {
               </div>
 
               <div className="flex justify-end">
-                <div className="w-64 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-border overflow-hidden">
+                <div className="w-72 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-border overflow-hidden">
                   <div className="px-4 py-2 space-y-1.5">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Sub Total</span>
@@ -402,6 +455,19 @@ export function SaleFormDialog({ open, onClose }: Props) {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">SGST</span>
                       <span>₹{totalSgst.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm border-t pt-1.5">
+                      <span className="text-muted-foreground">IGST</span>
+                      <div className="w-28">
+                        <Input
+                          type="number"
+                          min={0}
+                          value={form.igst === 0 ? "" : form.igst}
+                          onChange={(e) => setForm((prev) => ({ ...prev, igst: Number(e.target.value) || 0 }))}
+                          placeholder="0.00"
+                          className="text-right text-sm h-7 px-2"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="flex justify-between px-4 py-2.5 bg-primary text-primary-foreground font-bold text-sm">
