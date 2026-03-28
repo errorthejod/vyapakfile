@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
   { to: "/parties", icon: Users, label: "Parties" },
-  { to: "/items", icon: Package, label: "Items" },
+  { to: "/items", icon: Package, label: "Stock" },
   { to: "/sales", icon: ShoppingCart, label: "Sale" },
   { to: "/purchase", icon: Receipt, label: "Purchase & Expense" },
   { to: "/cash-bank", icon: Wallet, label: "Cash & Bank" },
