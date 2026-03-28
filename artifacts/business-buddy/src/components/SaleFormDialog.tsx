@@ -150,7 +150,6 @@ export function SaleFormDialog({ open, onClose }: Props) {
       partyId: "", partyName: "", partyAddress: "", partyPhone: "", partyGst: "",
       date: today,
       invoiceItems: [emptyItem()],
-      igst: 0,
       invoiceYear: getFinancialYear(today),
       invoiceNumber: getNextInvoiceNum(),
     };
@@ -173,7 +172,8 @@ export function SaleFormDialog({ open, onClose }: Props) {
   const subtotal = form.invoiceItems.reduce((s, i) => s + i.amount, 0);
   const totalCgst = form.invoiceItems.reduce((s, i) => s + i.cgst, 0);
   const totalSgst = form.invoiceItems.reduce((s, i) => s + i.sgst, 0);
-  const totalAmount = subtotal + totalCgst + totalSgst + form.igst;
+  const igst = totalCgst + totalSgst;
+  const totalAmount = subtotal + igst;
 
   const handleSave = () => {
     if (!form.partyName) { toast.error("Please enter customer name"); return; }
@@ -191,7 +191,7 @@ export function SaleFormDialog({ open, onClose }: Props) {
       partyGst: form.partyGst,
       items: form.invoiceItems,
       subtotal, totalCgst, totalSgst,
-      igst: form.igst,
+      igst,
       totalAmount,
       type: "sale",
       createdAt: new Date().toISOString(),
@@ -204,7 +204,6 @@ export function SaleFormDialog({ open, onClose }: Props) {
       partyId: "", partyName: "", partyAddress: "", partyPhone: "", partyGst: "",
       date: today,
       invoiceItems: [emptyItem()],
-      igst: 0,
       invoiceYear: getFinancialYear(today),
       invoiceNumber: getNextInvoiceNum(1),
     });
@@ -456,18 +455,9 @@ export function SaleFormDialog({ open, onClose }: Props) {
                       <span className="text-muted-foreground">SGST</span>
                       <span>₹{totalSgst.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-sm border-t pt-1.5">
-                      <span className="text-muted-foreground">IGST</span>
-                      <div className="w-28">
-                        <Input
-                          type="number"
-                          min={0}
-                          value={form.igst === 0 ? "" : form.igst}
-                          onChange={(e) => setForm((prev) => ({ ...prev, igst: Number(e.target.value) || 0 }))}
-                          placeholder="0.00"
-                          className="text-right text-sm h-7 px-2"
-                        />
-                      </div>
+                    <div className="flex justify-between text-sm border-t pt-1.5">
+                      <span className="text-muted-foreground">IGST <span className="text-xs opacity-60">(CGST+SGST)</span></span>
+                      <span>₹{igst.toFixed(2)}</span>
                     </div>
                   </div>
                   <div className="flex justify-between px-4 py-2.5 bg-primary text-primary-foreground font-bold text-sm">

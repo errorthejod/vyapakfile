@@ -97,7 +97,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
           <table style={{ width: '280px', borderCollapse: 'collapse', border: '1px solid #e0e0e0', borderRadius: '6px', overflow: 'hidden' }}>
             <tbody>
               <tr style={{ borderBottom: '1px solid #e8e8e8' }}>
-                <td style={{ padding: '6px 12px', fontSize: '12px', color: '#666' }}>Sub Total</td>
+                <td style={{ padding: '6px 12px', fontSize: '12px', color: '#666' }}>Sub Total <span style={{ fontSize: '10px' }}>(Excl. GST)</span></td>
                 <td style={{ padding: '6px 12px', fontSize: '12px', textAlign: 'right', fontWeight: '600' }}>₹{invoice.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #e8e8e8' }}>
@@ -108,12 +108,10 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
                 <td style={{ padding: '6px 12px', fontSize: '12px', color: '#666' }}>SGST</td>
                 <td style={{ padding: '6px 12px', fontSize: '12px', textAlign: 'right' }}>₹{invoice.totalSgst.toFixed(2)}</td>
               </tr>
-              {(invoice.igst ?? 0) > 0 && (
-                <tr style={{ borderBottom: '1px solid #e8e8e8' }}>
-                  <td style={{ padding: '6px 12px', fontSize: '12px', color: '#666' }}>IGST</td>
-                  <td style={{ padding: '6px 12px', fontSize: '12px', textAlign: 'right' }}>₹{(invoice.igst ?? 0).toFixed(2)}</td>
-                </tr>
-              )}
+              <tr style={{ borderBottom: '1px solid #e8e8e8' }}>
+                <td style={{ padding: '6px 12px', fontSize: '12px', color: '#666' }}>IGST</td>
+                <td style={{ padding: '6px 12px', fontSize: '12px', textAlign: 'right' }}>₹{(invoice.igst ?? 0).toFixed(2)}</td>
+              </tr>
               <tr style={{ backgroundColor: '#1e3a8a', color: 'white' }}>
                 <td style={{ padding: '9px 12px', fontSize: '14px', fontWeight: 'bold' }}>Total Amount</td>
                 <td style={{ padding: '9px 12px', fontSize: '14px', fontWeight: 'bold', textAlign: 'right' }}>₹{invoice.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
