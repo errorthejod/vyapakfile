@@ -30,12 +30,18 @@ export function AppSidebar() {
   return (
     <aside className="w-60 shrink-0 bg-sidebar h-screen flex flex-col">
       <div className="p-5 border-b border-sidebar-border">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center shrink-0">
-            <span className="text-sm font-bold text-white">B</span>
+        <div className="flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-xl shrink-0 flex items-center justify-center relative overflow-hidden shadow-lg"
+            style={{ background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)" }}>
+            <span className="text-base font-black text-white tracking-tight drop-shadow">V</span>
+            <div className="absolute inset-0 opacity-20"
+              style={{ background: "radial-gradient(circle at 30% 30%, #fff 0%, transparent 60%)" }} />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-sidebar-foreground">BusinessBuddy</h1>
+            <h1 className="text-sm font-extrabold tracking-tight"
+              style={{ background: "linear-gradient(90deg, #818cf8, #c084fc, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Vyapak Billing
+            </h1>
             <p className="text-xs text-sidebar-foreground/60">Accounting Software</p>
           </div>
         </div>
