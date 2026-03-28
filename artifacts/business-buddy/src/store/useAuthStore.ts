@@ -31,7 +31,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      adminPassword: 'admin@123',
+      adminPassword: 'delhi5932',
       users: [
         {
           id: 'BB001',
