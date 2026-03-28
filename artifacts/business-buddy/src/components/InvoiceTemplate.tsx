@@ -87,7 +87,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
                 <td style={{ padding: '7px 8px', fontSize: '12px', textAlign: 'center' }}>{item.gstPercent}%</td>
                 <td style={{ padding: '7px 8px', fontSize: '12px', textAlign: 'right' }}>₹{item.cgst.toFixed(2)}</td>
                 <td style={{ padding: '7px 8px', fontSize: '12px', textAlign: 'right' }}>₹{item.sgst.toFixed(2)}</td>
-                <td style={{ padding: '7px 8px', fontSize: '12px', textAlign: 'right', fontWeight: '600' }}>₹{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                <td style={{ padding: '7px 8px', fontSize: '12px', textAlign: 'right', fontWeight: '600' }}>₹{(item.amount - item.cgst - item.sgst).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
               </tr>
             ))}
           </tbody>

@@ -118,14 +118,17 @@ const emptyItem = (): InvoiceItem => ({
 });
 
 const calcFromRate = (item: InvoiceItem): InvoiceItem => {
-  const amount = item.qty * item.rate;
-  const gstAmount = (amount * item.gstPercent) / 100;
+  const baseAmount = item.qty * item.rate;
+  const gstAmount = (baseAmount * item.gstPercent) / 100;
+  const amount = baseAmount + gstAmount;
   return { ...item, amount, cgst: gstAmount / 2, sgst: gstAmount / 2 };
 };
 
 const calcFromAmount = (item: InvoiceItem): InvoiceItem => {
-  const rate = item.qty > 0 ? item.amount / item.qty : 0;
-  const gstAmount = (item.amount * item.gstPercent) / 100;
+  const divisor = 1 + item.gstPercent / 100;
+  const baseAmount = divisor > 0 ? item.amount / divisor : item.amount;
+  const gstAmount = item.amount - baseAmount;
+  const rate = item.qty > 0 ? baseAmount / item.qty : 0;
   return { ...item, rate, cgst: gstAmount / 2, sgst: gstAmount / 2 };
 };
 
@@ -169,11 +172,11 @@ export function SaleFormDialog({ open, onClose }: Props) {
   const addItemRow = () => setForm((prev) => ({ ...prev, invoiceItems: [...prev.invoiceItems, emptyItem()] }));
   const removeItemRow = (index: number) => setForm((prev) => ({ ...prev, invoiceItems: prev.invoiceItems.filter((_, i) => i !== index) }));
 
-  const subtotal = form.invoiceItems.reduce((s, i) => s + i.amount, 0);
   const totalCgst = form.invoiceItems.reduce((s, i) => s + i.cgst, 0);
   const totalSgst = form.invoiceItems.reduce((s, i) => s + i.sgst, 0);
   const igst = totalCgst + totalSgst;
-  const totalAmount = subtotal + igst;
+  const totalAmount = form.invoiceItems.reduce((s, i) => s + i.amount, 0);
+  const subtotal = totalAmount - igst;
 
   const handleSave = () => {
     if (!form.partyName) { toast.error("Please enter customer name"); return; }
