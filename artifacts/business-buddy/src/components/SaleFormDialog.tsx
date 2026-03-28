@@ -294,13 +294,14 @@ export function SaleFormDialog({ open, onClose }: Props) {
                 <FileText className="h-4 w-4" />
                 New Sale Invoice
               </DialogTitle>
-              <div className="flex items-center gap-3 text-xs text-primary-foreground/80">
+              <div className="flex items-center gap-4 text-xs text-primary-foreground/80">
+                <span className="flex items-center gap-1 font-medium opacity-90">FY {form.invoiceYear}</span>
                 <span className="flex items-center gap-1"><Hash className="h-3 w-3" />{form.invoiceNumber}</span>
               </div>
             </div>
 
             <div className="p-5 space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30">
                 <div className="md:col-span-2">
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1">
                     <User className="h-3 w-3" /> Customer Name *
@@ -347,15 +348,6 @@ export function SaleFormDialog({ open, onClose }: Props) {
                   />
                 </div>
                 <div>
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Invoice Year</Label>
-                  <Input
-                    value={form.invoiceYear}
-                    onChange={(e) => setForm((prev) => ({ ...prev, invoiceYear: e.target.value }))}
-                    placeholder="e.g. 2025-2026"
-                    className="text-sm"
-                  />
-                </div>
-                <div>
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1">
                     <Hash className="h-3 w-3" /> Bill No
                   </Label>
@@ -370,7 +362,7 @@ export function SaleFormDialog({ open, onClose }: Props) {
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">GSTIN</Label>
                   <Input value={form.partyGst} onChange={(e) => setForm((prev) => ({ ...prev, partyGst: e.target.value }))} placeholder="Optional" className="text-sm" />
                 </div>
-                <div className="md:col-span-6">
+                <div className="md:col-span-5">
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Address</Label>
                   <Input value={form.partyAddress} onChange={(e) => setForm((prev) => ({ ...prev, partyAddress: e.target.value }))} placeholder="Customer address (optional)" className="text-sm" />
                 </div>
