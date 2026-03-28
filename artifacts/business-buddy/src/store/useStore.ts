@@ -46,9 +46,9 @@ export const useStore = create<AppState>()(
       shopInfo: {
         name: 'Shuvidha Telecom Mobile and Electronics',
         address: 'GROUND FLOOR, SHOP NO-5 PLOT NO 1 KH NO-19/20, RAMA VIHAR BLOCK-D, VILLAGE MOHAMMAD PUR MAGRI DELHI-110081',
-        phone: '011-28756432',
-        gst: '07AABCK1234R1Z5',
-        email: 'krishnamobile@email.com',
+        phone: '8851711152',
+        gst: '07AFLPN1298M2ZR',
+        email: 'shuvidhatelecom@gmail.com',
       },
       addParty: (party) => set((s) => ({ parties: [...s.parties, party] })),
       updateParty: (id, data) => set((s) => ({ parties: s.parties.map((p) => p.id === id ? { ...p, ...data } : p) })),

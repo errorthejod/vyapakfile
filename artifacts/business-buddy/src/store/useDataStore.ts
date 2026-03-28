@@ -44,9 +44,9 @@ const sampleData: UserData = {
   shopInfo: {
     name: 'Shuvidha Telecom Mobile and Electronics',
     address: 'GROUND FLOOR, SHOP NO-5 PLOT NO 1 KH NO-19/20, RAMA VIHAR BLOCK-D, VILLAGE MOHAMMAD PUR MAGRI DELHI-110081',
-    phone: '011-28756432',
-    gst: '07AABCK1234R1Z5',
-    email: 'krishnamobile@email.com',
+    phone: '8851711152',
+    gst: '07AFLPN1298M2ZR',
+    email: 'shuvidhatelecom@gmail.com',
   },
 };
 
@@ -171,6 +171,9 @@ export const useDataStore = create<DataStore>()(
         if (state && state.allData['BB001']) {
           state.allData['BB001'].shopInfo.name = 'Shuvidha Telecom Mobile and Electronics';
           state.allData['BB001'].shopInfo.address = 'GROUND FLOOR, SHOP NO-5 PLOT NO 1 KH NO-19/20, RAMA VIHAR BLOCK-D, VILLAGE MOHAMMAD PUR MAGRI DELHI-110081';
+          state.allData['BB001'].shopInfo.phone = '8851711152';
+          state.allData['BB001'].shopInfo.gst = '07AFLPN1298M2ZR';
+          state.allData['BB001'].shopInfo.email = 'shuvidhatelecom@gmail.com';
         }
       },
     }
