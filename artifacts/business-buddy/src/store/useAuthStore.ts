@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthState>()(
         {
           id: 'BB001',
           name: 'Demo User',
-          businessName: 'Krishna Mobile & Electronics',
+          businessName: 'Shuvidha Telecom Mobile and Electronics',
           pin: '1234',
           createdAt: new Date().toISOString(),
           isActive: true,

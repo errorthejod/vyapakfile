@@ -44,8 +44,8 @@ export const useStore = create<AppState>()(
         },
       ],
       shopInfo: {
-        name: 'Krishna Mobile & Electronics',
-        address: 'Shop No. 12, Main Market, Karol Bagh, New Delhi - 110005',
+        name: 'Shuvidha Telecom Mobile and Electronics',
+        address: 'GROUND FLOOR, SHOP NO-5 PLOT NO 1 KH NO-19/20, RAMA VIHAR BLOCK-D, VILLAGE MOHAMMAD PUR MAGRI DELHI-110081',
         phone: '011-28756432',
         gst: '07AABCK1234R1Z5',
         email: 'krishnamobile@email.com',
