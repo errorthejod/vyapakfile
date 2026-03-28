@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { api, ApiUser } from '@/lib/api';
 
 export interface AppUser {
   id: string;
@@ -15,37 +16,57 @@ interface AuthState {
   users: AppUser[];
   currentUserId: string | null;
   isAdminSession: boolean;
-  nextUserNum: number;
+  usersLoaded: boolean;
 
+  loadUsers: () => Promise<void>;
+  loadAdminConfig: () => Promise<void>;
   login: (id: string, pin: string) => boolean;
-  loginByName: (name: string, pin: string) => boolean;
+  loginByName: (name: string, pin: string) => Promise<boolean>;
   logout: () => void;
   adminLogin: (password: string) => boolean;
   adminLogout: () => void;
-  changeAdminPassword: (oldPass: string, newPass: string) => boolean;
-  createUser: (name: string, businessName: string, customPin?: string) => AppUser;
-  updateUserPin: (id: string, newPin: string) => void;
-  deleteUser: (id: string) => void;
-  toggleUserActive: (id: string) => void;
+  changeAdminPassword: (oldPass: string, newPass: string) => Promise<boolean>;
+  createUser: (name: string, businessName: string, customPin?: string) => Promise<AppUser>;
+  updateUserPin: (id: string, newPin: string) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
+  toggleUserActive: (id: string) => Promise<void>;
+}
+
+function toAppUser(u: ApiUser): AppUser {
+  return {
+    id: u.id,
+    name: u.name,
+    businessName: u.businessName,
+    pin: u.pin,
+    createdAt: typeof u.createdAt === 'string' ? u.createdAt : new Date(u.createdAt).toISOString(),
+    isActive: u.isActive,
+  };
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       adminPassword: 'delhi5932',
-      users: [
-        {
-          id: 'BB001',
-          name: 'Demo User',
-          businessName: 'Shuvidha Telecom Mobile and Electronics',
-          pin: '1234',
-          createdAt: new Date().toISOString(),
-          isActive: true,
-        },
-      ],
+      users: [],
       currentUserId: null,
       isAdminSession: false,
-      nextUserNum: 2,
+      usersLoaded: false,
+
+      loadUsers: async () => {
+        try {
+          const apiUsers = await api.getUsers();
+          set({ users: apiUsers.map(toAppUser), usersLoaded: true });
+        } catch {
+          set({ usersLoaded: true });
+        }
+      },
+
+      loadAdminConfig: async () => {
+        try {
+          const config = await api.getAdminConfig();
+          set({ adminPassword: config.adminPassword });
+        } catch {}
+      },
 
       login: (id, pin) => {
         const user = get().users.find(u => u.id === id && u.pin === pin && u.isActive);
@@ -56,14 +77,21 @@ export const useAuthStore = create<AuthState>()(
         return false;
       },
 
-      loginByName: (name, pin) => {
-        const lower = name.trim().toLowerCase();
-        const user = get().users.find(u => u.name.toLowerCase() === lower && u.pin === pin && u.isActive);
-        if (user) {
-          set({ currentUserId: user.id, isAdminSession: false });
+      loginByName: async (name, pin) => {
+        try {
+          const user = await api.login(name, pin);
+          const appUser = toAppUser(user);
+          set(s => ({
+            currentUserId: appUser.id,
+            isAdminSession: false,
+            users: s.users.some(u => u.id === appUser.id)
+              ? s.users.map(u => u.id === appUser.id ? appUser : u)
+              : [...s.users, appUser],
+          }));
           return true;
+        } catch {
+          return false;
         }
-        return false;
       },
 
       logout: () => set({ currentUserId: null, isAdminSession: false }),
@@ -78,49 +106,53 @@ export const useAuthStore = create<AuthState>()(
 
       adminLogout: () => set({ isAdminSession: false }),
 
-      changeAdminPassword: (oldPass, newPass) => {
-        if (oldPass === get().adminPassword) {
+      changeAdminPassword: async (oldPass, newPass) => {
+        if (oldPass !== get().adminPassword) return false;
+        try {
+          await api.updateAdminConfig(newPass);
           set({ adminPassword: newPass });
           return true;
+        } catch {
+          return false;
         }
-        return false;
       },
 
-      createUser: (name, businessName, customPin) => {
-        const num = get().nextUserNum;
-        const id = `BB${String(num).padStart(3, '0')}`;
+      createUser: async (name, businessName, customPin) => {
         const pin = customPin?.trim() || String(Math.floor(1000 + Math.random() * 9000));
-        const newUser: AppUser = {
-          id,
-          name,
-          businessName,
-          pin,
-          createdAt: new Date().toISOString(),
-          isActive: true,
-        };
-        set(s => ({ users: [...s.users, newUser], nextUserNum: num + 1 }));
-        return newUser;
+        const apiUser = await api.createUser(name, businessName, pin);
+        const appUser = toAppUser(apiUser);
+        set(s => ({ users: [...s.users, appUser] }));
+        return appUser;
       },
 
-      updateUserPin: (id, newPin) =>
+      updateUserPin: async (id, newPin) => {
+        await api.updateUser(id, { pin: newPin });
         set(s => ({
           users: s.users.map(u => u.id === id ? { ...u, pin: newPin } : u),
-        })),
+        }));
+      },
 
-      deleteUser: (id) => set(s => ({ users: s.users.filter(u => u.id !== id) })),
+      deleteUser: async (id) => {
+        await api.deleteUser(id);
+        set(s => ({ users: s.users.filter(u => u.id !== id) }));
+      },
 
-      toggleUserActive: (id) =>
+      toggleUserActive: async (id) => {
+        const user = get().users.find(u => u.id === id);
+        if (!user) return;
+        const newActive = !user.isActive;
+        await api.updateUser(id, { isActive: newActive });
         set(s => ({
-          users: s.users.map(u => u.id === id ? { ...u, isActive: !u.isActive } : u),
-        })),
+          users: s.users.map(u => u.id === id ? { ...u, isActive: newActive } : u),
+        }));
+      },
     }),
     {
       name: 'bb-auth-store',
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          state.adminPassword = 'delhi5932';
-        }
-      },
+      partialize: (state) => ({
+        currentUserId: state.currentUserId,
+        adminPassword: state.adminPassword,
+      }),
     }
   )
 );

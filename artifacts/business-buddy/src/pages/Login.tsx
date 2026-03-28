@@ -13,10 +13,14 @@ export default function Login() {
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const loginByName = useAuthStore(s => s.loginByName);
+  const loadAdminConfig = useAuthStore(s => s.loadAdminConfig);
   const currentUserId = useAuthStore(s => s.currentUserId);
-  const users = useAuthStore(s => s.users);
   const initUser = useDataStore(s => s.initUser);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    loadAdminConfig();
+  }, [loadAdminConfig]);
 
   useEffect(() => {
     if (currentUserId) {
@@ -24,21 +28,27 @@ export default function Login() {
     }
   }, [currentUserId, navigate]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !pin.trim()) {
       toast.error("Please enter your name and password");
       return;
     }
     setLoading(true);
-    const success = loginByName(name.trim(), pin.trim());
-    if (success) {
-      const user = users.find(u => u.name.toLowerCase() === name.trim().toLowerCase());
-      if (user) initUser(user.id, false, user.businessName);
-      toast.success("Login successful!");
-      navigate("/", { replace: true });
-    } else {
-      toast.error("Invalid name or password. Contact your admin.");
+    try {
+      const success = await loginByName(name.trim(), pin.trim());
+      if (success) {
+        const users = useAuthStore.getState().users;
+        const user = users.find(u => u.name.toLowerCase() === name.trim().toLowerCase());
+        if (user) initUser(user.id, false, user.businessName);
+        toast.success("Login successful!");
+        navigate("/", { replace: true });
+      } else {
+        toast.error("Invalid name or password. Contact your admin.");
+        setLoading(false);
+      }
+    } catch {
+      toast.error("Could not connect to server. Please try again.");
       setLoading(false);
     }
   };
@@ -47,10 +57,14 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-blue-600 mb-4 shadow-lg shadow-blue-500/30">
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl mb-4 shadow-lg relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)" }}>
             <Briefcase className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white">BusinessBuddy</h1>
+          <h1 className="text-3xl font-black tracking-tight"
+            style={{ background: "linear-gradient(90deg, #818cf8, #c084fc, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            Vyapak Billing
+          </h1>
           <p className="text-blue-300 mt-1 text-sm">Smart Accounting for Small Business</p>
         </div>
 
@@ -104,7 +118,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-white/30 text-xs mt-6">
-          BusinessBuddy v1.0 · Powered by secure login
+          Vyapak Billing v1.0 · Powered by secure login
         </p>
       </div>
     </div>

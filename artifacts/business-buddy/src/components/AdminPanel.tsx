@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore, AppUser } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Shield, Plus, Trash2, Copy, Eye, EyeOff, UserCheck, UserX, KeyRound, Users, Lock, RefreshCw, Pencil, Check, X } from "lucide-react";
+import { Shield, Plus, Trash2, Copy, Eye, EyeOff, UserCheck, UserX, KeyRound, Users, Lock, RefreshCw, Pencil, Check, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Tab = 'users' | 'create' | 'password';
@@ -25,8 +25,13 @@ export function AdminPanel() {
   const [confirmPass, setConfirmPass] = useState("");
   const [showPins, setShowPins] = useState<Record<string, boolean>>({});
   const [editingPin, setEditingPin] = useState<{ id: string; val: string } | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const { users, currentUserId, adminLogin, adminLogout, createUser, deleteUser, toggleUserActive, changeAdminPassword, updateUserPin } = useAuthStore();
+  const { users, currentUserId, adminLogin, adminLogout, loadUsers, createUser, deleteUser, toggleUserActive, changeAdminPassword, updateUserPin } = useAuthStore();
+
+  useEffect(() => {
+    if (isAuth) loadUsers();
+  }, [isAuth, loadUsers]);
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +53,7 @@ export function AdminPanel() {
     adminLogout();
   };
 
-  const handleCreateUser = () => {
+  const handleCreateUser = async () => {
     if (!newUserName.trim() || !newBizName.trim()) {
       toast.error("Name and business name are required");
       return;
@@ -57,33 +62,79 @@ export function AdminPanel() {
       toast.error("Password must be at least 4 characters");
       return;
     }
-    const user = createUser(newUserName.trim(), newBizName.trim(), newUserPin.trim() || undefined);
-    setCreatedUser(user);
-    setNewUserName("");
-    setNewBizName("");
-    setNewUserPin("");
-    toast.success(`Account ${user.id} created!`);
+    setBusy(true);
+    try {
+      const user = await createUser(newUserName.trim(), newBizName.trim(), newUserPin.trim() || undefined);
+      setCreatedUser(user);
+      setNewUserName("");
+      setNewBizName("");
+      setNewUserPin("");
+      toast.success(`Account ${user.id} created!`);
+    } catch {
+      toast.error("Failed to create account. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const handleSavePin = () => {
+  const handleSavePin = async () => {
     if (!editingPin) return;
     if (editingPin.val.trim().length < 4) {
       toast.error("Password must be at least 4 characters");
       return;
     }
-    updateUserPin(editingPin.id, editingPin.val.trim());
-    setEditingPin(null);
-    toast.success("Password updated!");
+    setBusy(true);
+    try {
+      await updateUserPin(editingPin.id, editingPin.val.trim());
+      setEditingPin(null);
+      toast.success("Password updated!");
+    } catch {
+      toast.error("Failed to update password.");
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const handleChangePassword = () => {
+  const handleDeleteUser = async (id: string) => {
+    if (!confirm(`Delete ${id}?`)) return;
+    setBusy(true);
+    try {
+      await deleteUser(id);
+      toast.success("Account deleted.");
+    } catch {
+      toast.error("Failed to delete account.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleToggleActive = async (id: string) => {
+    setBusy(true);
+    try {
+      await toggleUserActive(id);
+    } catch {
+      toast.error("Failed to update account.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
     if (newPass !== confirmPass) { toast.error("Passwords don't match"); return; }
     if (newPass.length < 6) { toast.error("Password must be at least 6 characters"); return; }
-    if (changeAdminPassword(oldPass, newPass)) {
-      toast.success("Admin password changed!");
-      setOldPass(""); setNewPass(""); setConfirmPass("");
-    } else {
-      toast.error("Old password is incorrect");
+    setBusy(true);
+    try {
+      const ok = await changeAdminPassword(oldPass, newPass);
+      if (ok) {
+        toast.success("Admin password changed!");
+        setOldPass(""); setNewPass(""); setConfirmPass("");
+      } else {
+        toast.error("Old password is incorrect");
+      }
+    } catch {
+      toast.error("Failed to change password.");
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -173,15 +224,17 @@ export function AdminPanel() {
                           </div>
                           <div className="flex gap-1 shrink-0">
                             <button
-                              onClick={() => toggleUserActive(user.id)}
-                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
+                              onClick={() => handleToggleActive(user.id)}
+                              disabled={busy}
+                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50"
                               title={user.isActive ? "Deactivate" : "Activate"}
                             >
                               {user.isActive ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
                             </button>
                             <button
-                              onClick={() => { if (confirm(`Delete ${user.id}?`)) deleteUser(user.id); }}
-                              className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-600"
+                              onClick={() => handleDeleteUser(user.id)}
+                              disabled={busy}
+                              className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-600 disabled:opacity-50"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -200,8 +253,8 @@ export function AdminPanel() {
                                   autoFocus
                                   maxLength={20}
                                 />
-                                <button onClick={handleSavePin} className="text-green-600 hover:text-green-500">
-                                  <Check className="h-3.5 w-3.5" />
+                                <button onClick={handleSavePin} disabled={busy} className="text-green-600 hover:text-green-500 disabled:opacity-50">
+                                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                                 </button>
                                 <button onClick={() => setEditingPin(null)} className="text-muted-foreground hover:text-foreground">
                                   <X className="h-3.5 w-3.5" />
@@ -267,7 +320,7 @@ export function AdminPanel() {
                           </div>
                         </div>
                         <Button
-                          onClick={() => copyToClipboard(`BusinessBuddy Login\nUser ID: ${createdUser.id}\nPIN: ${createdUser.pin}\nBusiness: ${createdUser.businessName}`, "All credentials")}
+                          onClick={() => copyToClipboard(`Vyapak Billing Login\nUser ID: ${createdUser.id}\nPIN: ${createdUser.pin}\nBusiness: ${createdUser.businessName}`, "All credentials")}
                           variant="outline"
                           className="w-full"
                         >
@@ -322,9 +375,9 @@ export function AdminPanel() {
                             </div>
                           </div>
                         </div>
-                        <Button onClick={handleCreateUser} className="w-full">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Generate Account
+                        <Button onClick={handleCreateUser} disabled={busy} className="w-full">
+                          {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+                          {busy ? "Creating..." : "Generate Account"}
                         </Button>
                       </div>
                     )}
@@ -346,9 +399,9 @@ export function AdminPanel() {
                       <Label>Confirm New Password</Label>
                       <Input type="password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)} placeholder="Confirm new password" className="mt-1" />
                     </div>
-                    <Button onClick={handleChangePassword} className="w-full">
-                      <KeyRound className="h-4 w-4 mr-2" />
-                      Change Password
+                    <Button onClick={handleChangePassword} disabled={busy} className="w-full">
+                      {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <KeyRound className="h-4 w-4 mr-2" />}
+                      {busy ? "Saving..." : "Change Password"}
                     </Button>
                   </div>
                 )}
