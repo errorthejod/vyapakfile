@@ -47,8 +47,8 @@ export function AppSidebar() {
       </nav>
       <div className="p-3 border-t border-sidebar-border space-y-2">
         <div className="bg-sidebar-border/30 rounded-lg px-3 py-2">
-          <p className="text-xs font-semibold text-sidebar-foreground truncate">{shopInfo.name || currentUser?.businessName || 'My Business'}</p>
-          <p className="text-xs text-sidebar-foreground/50">{currentUserId}</p>
+          <p className="text-xs font-semibold text-sidebar-foreground truncate">{currentUser?.name || 'User'}</p>
+          <p className="text-xs text-sidebar-foreground/50 truncate">{shopInfo.name || currentUser?.businessName || 'My Business'}</p>
         </div>
         <button
           onClick={handleLogout}

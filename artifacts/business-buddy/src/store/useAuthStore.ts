@@ -18,6 +18,7 @@ interface AuthState {
   nextUserNum: number;
 
   login: (id: string, pin: string) => boolean;
+  loginByName: (name: string, pin: string) => boolean;
   logout: () => void;
   adminLogin: (password: string) => boolean;
   adminLogout: () => void;
@@ -48,6 +49,16 @@ export const useAuthStore = create<AuthState>()(
 
       login: (id, pin) => {
         const user = get().users.find(u => u.id === id && u.pin === pin && u.isActive);
+        if (user) {
+          set({ currentUserId: user.id, isAdminSession: false });
+          return true;
+        }
+        return false;
+      },
+
+      loginByName: (name, pin) => {
+        const lower = name.trim().toLowerCase();
+        const user = get().users.find(u => u.name.toLowerCase() === lower && u.pin === pin && u.isActive);
         if (user) {
           set({ currentUserId: user.id, isAdminSession: false });
           return true;

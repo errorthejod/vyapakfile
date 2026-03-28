@@ -26,7 +26,7 @@ export function AdminPanel() {
   const [showPins, setShowPins] = useState<Record<string, boolean>>({});
   const [editingPin, setEditingPin] = useState<{ id: string; val: string } | null>(null);
 
-  const { users, adminLogin, adminLogout, createUser, deleteUser, toggleUserActive, changeAdminPassword, updateUserPin } = useAuthStore();
+  const { users, currentUserId, adminLogin, adminLogout, createUser, deleteUser, toggleUserActive, changeAdminPassword, updateUserPin } = useAuthStore();
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,14 +93,16 @@ export function AdminPanel() {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold border border-slate-600 transition-all hover:scale-105"
-        title="Admin Panel"
-      >
-        <Shield className="h-3.5 w-3.5 text-blue-400" />
-        ADMIN
-      </button>
+      {!currentUserId && (
+        <button
+          onClick={() => setOpen(true)}
+          className="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-xl shadow-lg text-xs font-semibold border border-slate-600 transition-all hover:scale-105"
+          title="Admin Panel"
+        >
+          <Shield className="h-3.5 w-3.5 text-blue-400" />
+          ADMIN
+        </button>
+      )}
 
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-0">

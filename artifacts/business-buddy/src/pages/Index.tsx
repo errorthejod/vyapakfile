@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useCurrentStore } from "@/store/useCurrentStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { SaleFormDialog } from "@/components/SaleFormDialog";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -22,7 +23,11 @@ function formatINR(val: number) {
 export default function Index() {
   const { parties, invoices, shopInfo } = useCurrentStore();
   const currentUserId = useAuthStore(s => s.currentUserId);
+  const users = useAuthStore(s => s.users);
   const navigate = useNavigate();
+  const [showSaleForm, setShowSaleForm] = useState(false);
+
+  const currentUser = users.find(u => u.id === currentUserId);
 
   const now = new Date();
   const year = now.getFullYear();
@@ -71,15 +76,16 @@ export default function Index() {
 
   return (
     <Layout>
+      <SaleFormDialog open={showSaleForm} onClose={() => setShowSaleForm(false)} />
       <div className="flex flex-col h-full -m-4 md:-m-6">
         <div className="flex items-center justify-between px-5 py-3 border-b bg-white shrink-0">
           <div>
             <h1 className="text-sm font-bold text-foreground leading-tight">{shopInfo.name}</h1>
-            <p className="text-xs text-muted-foreground">ID: {currentUserId}</p>
+            <p className="text-xs text-muted-foreground">{currentUser?.name}</p>
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => navigate('/sales')}
+              onClick={() => setShowSaleForm(true)}
               className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
             >
               + Add Sale

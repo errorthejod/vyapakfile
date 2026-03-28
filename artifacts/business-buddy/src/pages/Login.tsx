@@ -9,11 +9,12 @@ import { toast } from "sonner";
 import { Lock, User, Briefcase } from "lucide-react";
 
 export default function Login() {
-  const [userId, setUserId] = useState("");
+  const [name, setName] = useState("");
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
-  const login = useAuthStore(s => s.login);
+  const loginByName = useAuthStore(s => s.loginByName);
   const currentUserId = useAuthStore(s => s.currentUserId);
+  const users = useAuthStore(s => s.users);
   const initUser = useDataStore(s => s.initUser);
   const navigate = useNavigate();
 
@@ -25,19 +26,19 @@ export default function Login() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId.trim() || !pin.trim()) {
-      toast.error("Please enter your User ID and PIN");
+    if (!name.trim() || !pin.trim()) {
+      toast.error("Please enter your name and password");
       return;
     }
     setLoading(true);
-    const id = userId.trim().toUpperCase();
-    const success = login(id, pin.trim());
+    const success = loginByName(name.trim(), pin.trim());
     if (success) {
-      initUser(id);
+      const user = users.find(u => u.name.toLowerCase() === name.trim().toLowerCase());
+      if (user) initUser(user.id);
       toast.success("Login successful!");
       navigate("/", { replace: true });
     } else {
-      toast.error("Invalid User ID or PIN. Contact your admin.");
+      toast.error("Invalid name or password. Contact your admin.");
       setLoading(false);
     }
   };
@@ -58,30 +59,29 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <Label className="text-blue-200 text-sm font-medium">User ID</Label>
+              <Label className="text-blue-200 text-sm font-medium">Your Name</Label>
               <div className="relative mt-1.5">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-400" />
                 <Input
-                  value={userId}
-                  onChange={e => setUserId(e.target.value)}
-                  placeholder="e.g. BB001"
-                  className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-blue-400 focus:ring-blue-400/20 uppercase"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-blue-400 focus:ring-blue-400/20"
                   autoComplete="off"
                 />
               </div>
             </div>
 
             <div>
-              <Label className="text-blue-200 text-sm font-medium">PIN</Label>
+              <Label className="text-blue-200 text-sm font-medium">Password</Label>
               <div className="relative mt-1.5">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-400" />
                 <Input
                   type="password"
                   value={pin}
                   onChange={e => setPin(e.target.value)}
-                  placeholder="Enter your 4-digit PIN"
+                  placeholder="Enter your password"
                   className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-blue-400 focus:ring-blue-400/20"
-                  maxLength={6}
                   autoComplete="off"
                 />
               </div>
