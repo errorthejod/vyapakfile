@@ -48,6 +48,18 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 - `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
 - `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
 
+## Artifacts
+
+### `artifacts/business-buddy` (`@workspace/business-buddy`)
+
+React + Vite web app — BusinessBuddy small business accounting software.
+
+- **Stack**: React, Vite, Tailwind CSS v4, shadcn/ui, Zustand (with persist), Framer Motion, Recharts, React Router DOM, html2canvas, jsPDF
+- **Pages**: Dashboard, Parties, Items, Sales (with invoice creation + PDF download), Purchase (stub), Cash & Bank (stub), Reports, Settings
+- **Data**: All state managed by Zustand with localStorage persistence (key: `vyapar-store`)
+- **Routing**: React Router DOM v7 with `basename={import.meta.env.BASE_URL}`
+- Served at preview path `/`
+
 ## Packages
 
 ### `artifacts/api-server` (`@workspace/api-server`)
