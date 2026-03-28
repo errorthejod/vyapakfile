@@ -37,6 +37,7 @@ export interface Invoice {
   partyId: string;
   partyName: string;
   partyAddress: string;
+  partyPhone?: string;
   partyGst?: string;
   items: InvoiceItem[];
   subtotal: number;
@@ -53,6 +54,7 @@ export interface ShopInfo {
   phone: string;
   gst: string;
   email?: string;
+  gtNo?: string;
 }
 
 export interface MonthlySales {

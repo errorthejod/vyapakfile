@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, FileText, Printer, Download } from "lucide-react";
+import { Plus, Trash2, FileText, Printer, Download, User, Calendar, Hash } from "lucide-react";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -17,11 +17,13 @@ const SuggestionInput = ({
   onChange,
   suggestions,
   placeholder,
+  className = "",
 }: {
   value: string;
   onChange: (val: string, selected?: { id?: string; phone?: string; address?: string; gst?: string }) => void;
   suggestions: { label: string; id?: string; phone?: string; address?: string; gst?: string }[];
   placeholder: string;
+  className?: string;
 }) => {
   const [query, setQuery] = useState(value);
   const [show, setShow] = useState(false);
@@ -41,16 +43,18 @@ const SuggestionInput = ({
         onFocus={(e) => { setShow(true); e.target.select(); }}
         onBlur={() => setTimeout(() => setShow(false), 200)}
         placeholder={placeholder}
+        className={className}
       />
       {show && query && filtered.length > 0 && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-40 overflow-auto">
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-44 overflow-auto">
           {filtered.map((s, idx) => (
             <button
               key={s.id || idx}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+              className="w-full text-left px-3 py-2.5 text-sm hover:bg-accent/10 border-b border-border/40 last:border-0"
               onMouseDown={() => { setQuery(s.label); setShow(false); onChange(s.label, s); }}
             >
-              {s.label}
+              <span className="font-medium">{s.label}</span>
+              {s.phone && <span className="ml-2 text-xs text-muted-foreground">{s.phone}</span>}
             </button>
           ))}
         </div>
@@ -81,18 +85,19 @@ const ProductInput = ({
         onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true); onChange(e.target.value); }}
         onFocus={(e) => { setShowSuggestions(true); e.target.select(); }}
         onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-        placeholder="Type product name"
+        placeholder="Item / Service name"
+        className="text-sm"
       />
       {showSuggestions && query && filtered.length > 0 && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-40 overflow-auto">
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-44 overflow-auto">
           {filtered.map((item) => (
             <button
               key={item.id}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+              className="w-full text-left px-3 py-2.5 text-sm hover:bg-accent/10 border-b border-border/40 last:border-0"
               onMouseDown={() => { setQuery(item.name); setShowSuggestions(false); onChange(item.name, item.id, item.price, item.gstPercent, item.unit); }}
             >
               <span className="font-medium">{item.name}</span>
-              <span className="ml-2 text-muted-foreground">₹{item.price}</span>
+              <span className="ml-2 text-xs text-muted-foreground">₹{item.price}</span>
             </button>
           ))}
         </div>
@@ -105,14 +110,20 @@ const emptyItem = (): InvoiceItem => ({
   itemId: "", name: "", qty: 1, rate: 0, gstPercent: 18, amount: 0, cgst: 0, sgst: 0,
 });
 
-const calcItem = (item: InvoiceItem): InvoiceItem => {
+const calcFromRate = (item: InvoiceItem): InvoiceItem => {
   const amount = item.qty * item.rate;
   const gstAmount = (amount * item.gstPercent) / 100;
   return { ...item, amount, cgst: gstAmount / 2, sgst: gstAmount / 2 };
 };
 
+const calcFromAmount = (item: InvoiceItem): InvoiceItem => {
+  const rate = item.qty > 0 ? item.amount / item.qty : 0;
+  const gstAmount = (item.amount * item.gstPercent) / 100;
+  return { ...item, rate, cgst: gstAmount / 2, sgst: gstAmount / 2 };
+};
+
 const defaultForm = () => ({
-  partyId: "", partyName: "", partyAddress: "", partyGst: "",
+  partyId: "", partyName: "", partyAddress: "", partyPhone: "", partyGst: "",
   date: new Date().toISOString().split("T")[0],
   invoiceItems: [emptyItem()],
 });
@@ -132,10 +143,11 @@ export function SaleFormDialog({ open, onClose }: Props) {
     label: p.name, id: p.id, phone: p.phone, address: p.address, gst: p.gst,
   }));
 
-  const updateItem = (index: number, updates: Partial<InvoiceItem>) => {
+  const updateItem = (index: number, updates: Partial<InvoiceItem>, fromAmount = false) => {
     setForm((prev) => {
       const newItems = [...prev.invoiceItems];
-      newItems[index] = calcItem({ ...newItems[index], ...updates });
+      const merged = { ...newItems[index], ...updates };
+      newItems[index] = fromAmount ? calcFromAmount(merged) : calcFromRate(merged);
       return { ...prev, invoiceItems: newItems };
     });
   };
@@ -149,8 +161,8 @@ export function SaleFormDialog({ open, onClose }: Props) {
   const totalAmount = subtotal + totalCgst + totalSgst;
 
   const handleSave = () => {
-    if (!form.partyName) { toast.error("Please select a customer"); return; }
-    if (form.invoiceItems.some((i) => !i.name || i.rate <= 0)) { toast.error("Please fill all item details"); return; }
+    if (!form.partyName) { toast.error("Please enter customer name"); return; }
+    if (form.invoiceItems.some((i) => !i.name || i.amount <= 0)) { toast.error("Please fill all item details"); return; }
 
     const invNum = `INV-${String(invoices.filter((i) => i.type === "sale").length + 1).padStart(3, "0")}`;
     const invoice: Invoice = {
@@ -160,6 +172,7 @@ export function SaleFormDialog({ open, onClose }: Props) {
       partyId: form.partyId,
       partyName: form.partyName,
       partyAddress: form.partyAddress,
+      partyPhone: form.partyPhone,
       partyGst: form.partyGst,
       items: form.invoiceItems,
       subtotal, totalCgst, totalSgst, totalAmount,
@@ -172,7 +185,30 @@ export function SaleFormDialog({ open, onClose }: Props) {
     setForm(defaultForm());
   };
 
-  const handlePrint = () => window.print();
+  const handlePrint = (invoice: Invoice) => {
+    const content = invoiceRef.current;
+    if (!content) return;
+    const printWin = window.open("", "_blank", "width=900,height=700");
+    if (!printWin) { toast.error("Popup blocked. Please allow popups."); return; }
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${invoice.invoiceNumber}</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; font-size: 13px; color: #000; background: #fff; }
+          </style>
+        </head>
+        <body>
+          ${content.innerHTML}
+        </body>
+      </html>
+    `);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => { printWin.print(); printWin.close(); }, 400);
+  };
 
   const handleDownloadPDF = async () => {
     if (!invoiceRef.current) return;
@@ -197,126 +233,190 @@ export function SaleFormDialog({ open, onClose }: Props) {
     onClose();
   };
 
+  const invoiceNum = `INV-${String(invoices.filter((i) => i.type === "sale").length + 1).padStart(3, "0")}`;
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            {savedInvoice ? "Invoice Saved" : "New Sale Invoice"}
-            {savedInvoice && (
-              <div className="flex gap-2 ml-auto">
-                <Button variant="outline" size="sm" onClick={handlePrint}>
-                  <Printer className="h-4 w-4 mr-1" /> Print
-                </Button>
-                <Button size="sm" onClick={handleDownloadPDF}>
-                  <Download className="h-4 w-4 mr-1" /> PDF
-                </Button>
-              </div>
-            )}
-          </DialogTitle>
-        </DialogHeader>
-
+      <DialogContent className="max-w-4xl max-h-[92vh] overflow-auto p-0">
         {savedInvoice ? (
           <div>
-            <InvoiceTemplate ref={invoiceRef} invoice={savedInvoice} shopInfo={shopInfo} />
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" onClick={() => setSavedInvoice(null)}>Create Another</Button>
-              <Button onClick={handleClose}>Done</Button>
+            <div className="flex items-center justify-between px-5 py-3 border-b bg-card">
+              <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+                <FileText className="h-4 w-4 text-primary" />
+                {savedInvoice.invoiceNumber} — Saved
+              </DialogTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => handlePrint(savedInvoice)}>
+                  <Printer className="h-4 w-4 mr-1.5" /> Print
+                </Button>
+                <Button size="sm" onClick={handleDownloadPDF}>
+                  <Download className="h-4 w-4 mr-1.5" /> PDF
+                </Button>
+              </div>
+            </div>
+            <div className="p-4">
+              <InvoiceTemplate ref={invoiceRef} invoice={savedInvoice} shopInfo={shopInfo} />
+              <div className="flex justify-end gap-2 mt-4 pt-3 border-t">
+                <Button variant="outline" onClick={() => setSavedInvoice(null)}>+ Create Another</Button>
+                <Button onClick={handleClose}>Done</Button>
+              </div>
             </div>
           </div>
         ) : (
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Customer Name *</Label>
-                <SuggestionInput
-                  value={form.partyName}
-                  suggestions={partySuggestions}
-                  placeholder="Select or type customer name"
-                  onChange={(val, selected) => {
-                    setForm((prev) => ({
-                      ...prev,
-                      partyName: val,
-                      partyId: selected?.id || "",
-                      partyAddress: selected?.address || prev.partyAddress,
-                      partyGst: selected?.gst || prev.partyGst,
-                    }));
-                  }}
-                />
-              </div>
-              <div>
-                <Label>Invoice Date</Label>
-                <Input type="date" value={form.date} onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))} />
-              </div>
-              <div>
-                <Label>Customer Address</Label>
-                <Input value={form.partyAddress} onChange={(e) => setForm((prev) => ({ ...prev, partyAddress: e.target.value }))} placeholder="Address" />
-              </div>
-              <div>
-                <Label>Customer GSTIN</Label>
-                <Input value={form.partyGst} onChange={(e) => setForm((prev) => ({ ...prev, partyGst: e.target.value }))} placeholder="GSTIN (optional)" />
+          <div>
+            <div className="flex items-center justify-between px-5 py-3.5 border-b bg-primary text-primary-foreground">
+              <DialogTitle className="flex items-center gap-2 text-base font-semibold text-primary-foreground">
+                <FileText className="h-4 w-4" />
+                New Sale Invoice
+              </DialogTitle>
+              <div className="flex items-center gap-3 text-xs text-primary-foreground/80">
+                <span className="flex items-center gap-1"><Hash className="h-3 w-3" />{invoiceNum}</span>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-muted-foreground px-1">
-                <div className="col-span-4">Item</div>
-                <div className="col-span-1 text-center">Qty</div>
-                <div className="col-span-2 text-right">Rate (₹)</div>
-                <div className="col-span-1 text-center">GST%</div>
-                <div className="col-span-2 text-right">CGST</div>
-                <div className="col-span-1 text-right">Amount</div>
-                <div className="col-span-1"></div>
+            <div className="p-5 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30">
+                <div className="md:col-span-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                    <User className="h-3 w-3" /> Customer Name *
+                  </Label>
+                  <SuggestionInput
+                    value={form.partyName}
+                    suggestions={partySuggestions}
+                    placeholder="Select or type name"
+                    onChange={(val, selected) => {
+                      setForm((prev) => ({
+                        ...prev,
+                        partyName: val,
+                        partyId: selected?.id || "",
+                        partyPhone: selected?.phone || prev.partyPhone,
+                        partyAddress: selected?.address || prev.partyAddress,
+                        partyGst: selected?.gst || prev.partyGst,
+                      }));
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Phone</Label>
+                  <Input
+                    value={form.partyPhone}
+                    onChange={(e) => setForm((prev) => ({ ...prev, partyPhone: e.target.value }))}
+                    placeholder="Mobile no."
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                    <Calendar className="h-3 w-3" /> Invoice Date
+                  </Label>
+                  <Input type="date" value={form.date} onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))} className="text-sm" />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">GSTIN</Label>
+                  <Input value={form.partyGst} onChange={(e) => setForm((prev) => ({ ...prev, partyGst: e.target.value }))} placeholder="Optional" className="text-sm" />
+                </div>
+                <div className="md:col-span-5">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Address</Label>
+                  <Input value={form.partyAddress} onChange={(e) => setForm((prev) => ({ ...prev, partyAddress: e.target.value }))} placeholder="Customer address (optional)" className="text-sm" />
+                </div>
               </div>
-              {form.invoiceItems.map((item, i) => (
-                <div key={i} className="grid grid-cols-12 gap-2 items-center">
-                  <div className="col-span-4">
-                    <ProductInput
-                      value={item.name}
-                      items={items}
-                      onChange={(name, itemId, rate, gstPercent) => {
-                        updateItem(i, { name, itemId: itemId || "", rate: rate || 0, gstPercent: gstPercent || 18 });
-                      }}
-                    />
+
+              <div className="rounded-xl border border-border overflow-hidden">
+                <div className="grid grid-cols-12 gap-0 bg-slate-700 dark:bg-slate-800 text-white text-xs font-semibold">
+                  <div className="col-span-4 px-3 py-2.5">#  Item / Service</div>
+                  <div className="col-span-1 px-2 py-2.5 text-center">Qty</div>
+                  <div className="col-span-2 px-2 py-2.5 text-right">Rate (₹)</div>
+                  <div className="col-span-1 px-1 py-2.5 text-center">GST%</div>
+                  <div className="col-span-2 px-2 py-2.5 text-right">CGST</div>
+                  <div className="col-span-2 px-2 py-2.5 text-right">Amount (₹)</div>
+                </div>
+                <div className="divide-y divide-border">
+                  {form.invoiceItems.map((item, i) => (
+                    <div key={i} className={`grid grid-cols-12 gap-0 items-center ${i % 2 === 0 ? 'bg-background' : 'bg-muted/30'}`}>
+                      <div className="col-span-4 px-2 py-1.5 flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground w-4 shrink-0">{i + 1}</span>
+                        <ProductInput
+                          value={item.name}
+                          items={items}
+                          onChange={(name, itemId, rate, gstPercent) => {
+                            updateItem(i, { name, itemId: itemId || "", rate: rate || 0, gstPercent: gstPercent || 18 });
+                          }}
+                        />
+                      </div>
+                      <div className="col-span-1 px-1 py-1.5">
+                        <Input type="number" min={1} value={item.qty}
+                          onChange={(e) => updateItem(i, { qty: Number(e.target.value) })}
+                          className="text-center text-sm h-8 px-1" />
+                      </div>
+                      <div className="col-span-2 px-1 py-1.5">
+                        <Input type="number" value={item.rate}
+                          onChange={(e) => updateItem(i, { rate: Number(e.target.value) })}
+                          className="text-right text-sm h-8 px-2" />
+                      </div>
+                      <div className="col-span-1 px-1 py-1.5">
+                        <Select value={String(item.gstPercent)} onValueChange={(v) => updateItem(i, { gstPercent: Number(v) })}>
+                          <SelectTrigger className="text-xs h-8 px-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {[0, 5, 12, 18, 28].map((g) => <SelectItem key={g} value={String(g)}>{g}%</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-2 px-2 py-1.5 text-right text-xs text-muted-foreground">
+                        ₹{item.cgst.toFixed(2)}
+                      </div>
+                      <div className="col-span-2 px-1 py-1.5 flex items-center gap-1">
+                        <Input
+                          type="number"
+                          value={item.amount === 0 ? "" : item.amount}
+                          onChange={(e) => updateItem(i, { amount: Number(e.target.value) }, true)}
+                          className="text-right text-sm h-8 px-2 font-semibold"
+                          placeholder="0"
+                        />
+                        {form.invoiceItems.length > 1 && (
+                          <button onClick={() => removeItemRow(i)} className="text-destructive hover:text-destructive/80 shrink-0">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-3 py-2 bg-muted/20 border-t">
+                  <Button variant="ghost" size="sm" onClick={addItemRow} className="text-primary hover:text-primary text-xs gap-1">
+                    <Plus className="h-3.5 w-3.5" /> Add Item
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <div className="w-64 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-border overflow-hidden">
+                  <div className="px-4 py-2 space-y-1.5">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Sub Total</span>
+                      <span className="font-medium">₹{subtotal.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">CGST</span>
+                      <span>₹{totalCgst.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">SGST</span>
+                      <span>₹{totalSgst.toFixed(2)}</span>
+                    </div>
                   </div>
-                  <div className="col-span-1">
-                    <Input type="number" min={1} value={item.qty} onChange={(e) => updateItem(i, { qty: Number(e.target.value) })} className="text-center" />
-                  </div>
-                  <div className="col-span-2">
-                    <Input type="number" value={item.rate} onChange={(e) => updateItem(i, { rate: Number(e.target.value) })} className="text-right" />
-                  </div>
-                  <div className="col-span-1">
-                    <Select value={String(item.gstPercent)} onValueChange={(v) => updateItem(i, { gstPercent: Number(v) })}>
-                      <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {[0, 5, 12, 18, 28].map((g) => <SelectItem key={g} value={String(g)}>{g}%</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-2 text-right text-sm text-muted-foreground px-2">₹{item.cgst.toFixed(2)}</div>
-                  <div className="col-span-1 text-right text-sm font-medium px-2">₹{item.amount.toLocaleString('en-IN')}</div>
-                  <div className="col-span-1 flex justify-center">
-                    {form.invoiceItems.length > 1 && (
-                      <Button variant="ghost" size="icon" onClick={() => removeItemRow(i)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    )}
+                  <div className="flex justify-between px-4 py-2.5 bg-primary text-primary-foreground font-bold text-sm">
+                    <span>Total Amount</span>
+                    <span>₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
-              ))}
-              <Button variant="outline" size="sm" onClick={addItemRow}><Plus className="h-4 w-4 mr-1" />Add Item</Button>
-            </div>
-
-            <div className="flex justify-end">
-              <div className="w-64 space-y-1.5">
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span>₹{subtotal.toLocaleString('en-IN')}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">CGST</span><span>₹{totalCgst.toFixed(2)}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground">SGST</span><span>₹{totalSgst.toFixed(2)}</span></div>
-                <div className="flex justify-between font-bold border-t pt-1.5"><span>Total</span><span className="text-primary">₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></div>
               </div>
-            </div>
 
-            <div className="flex justify-end">
-              <Button onClick={handleSave} size="lg"><FileText className="h-4 w-4 mr-2" />Save Invoice</Button>
+              <div className="flex justify-between items-center pt-1 border-t">
+                <Button variant="ghost" size="sm" onClick={handleClose} className="text-muted-foreground">Cancel</Button>
+                <Button onClick={handleSave} size="default" className="px-8">
+                  <FileText className="h-4 w-4 mr-2" /> Save Invoice
+                </Button>
+              </div>
             </div>
           </div>
         )}

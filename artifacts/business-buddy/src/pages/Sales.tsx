@@ -17,7 +17,25 @@ const Sales = () => {
 
   const saleInvoices = invoices.filter((i) => i.type === "sale");
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    const content = invoiceRef.current;
+    if (!content) return;
+    const printWin = window.open("", "_blank", "width=900,height=700");
+    if (!printWin) { toast.error("Popup blocked. Please allow popups."); return; }
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${showInvoice?.invoiceNumber || "Invoice"}</title>
+          <style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: Arial, sans-serif; font-size: 13px; color: #000; background: #fff; }</style>
+        </head>
+        <body>${content.innerHTML}</body>
+      </html>
+    `);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => { printWin.print(); printWin.close(); }, 400);
+  };
 
   const handleDownloadPDF = async () => {
     if (!invoiceRef.current) return;
