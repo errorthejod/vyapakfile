@@ -14,9 +14,8 @@ import jsPDF from "jspdf";
 
 function getFinancialYear(dateStr: string): string {
   const d = new Date(dateStr);
-  const month = d.getMonth() + 1;
   const year = d.getFullYear();
-  return month >= 4 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
+  return `${year}-${year + 1}`;
 }
 
 const SuggestionInput = ({
@@ -295,7 +294,7 @@ export function SaleFormDialog({ open, onClose }: Props) {
                 New Sale Invoice
               </DialogTitle>
               <div className="flex items-center gap-4 text-xs text-primary-foreground/80">
-                <span className="flex items-center gap-1 font-medium opacity-90">FY {form.invoiceYear}</span>
+                <span className="flex items-center gap-1 font-medium opacity-90">Invoice Year: {form.invoiceYear}</span>
                 <span className="flex items-center gap-1"><Hash className="h-3 w-3" />{form.invoiceNumber}</span>
               </div>
             </div>
