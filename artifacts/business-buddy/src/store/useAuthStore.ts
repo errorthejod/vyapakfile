@@ -103,6 +103,13 @@ export const useAuthStore = create<AuthState>()(
           users: s.users.map(u => u.id === id ? { ...u, isActive: !u.isActive } : u),
         })),
     }),
-    { name: 'bb-auth-store' }
+    {
+      name: 'bb-auth-store',
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.adminPassword = 'delhi5932';
+        }
+      },
+    }
   )
 );
