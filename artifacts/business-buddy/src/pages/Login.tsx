@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useDataStore } from "@/store/useDataStore";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,15 @@ export default function Login() {
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const login = useAuthStore(s => s.login);
+  const currentUserId = useAuthStore(s => s.currentUserId);
   const initUser = useDataStore(s => s.initUser);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUserId) {
+      navigate("/", { replace: true });
+    }
+  }, [currentUserId, navigate]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,16 +30,16 @@ export default function Login() {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      const success = login(userId.trim().toUpperCase(), pin.trim());
-      if (success) {
-        initUser(userId.trim().toUpperCase());
-        toast.success("Login successful!");
-      } else {
-        toast.error("Invalid User ID or PIN. Contact your admin.");
-        setLoading(false);
-      }
-    }, 500);
+    const id = userId.trim().toUpperCase();
+    const success = login(id, pin.trim());
+    if (success) {
+      initUser(id);
+      toast.success("Login successful!");
+      navigate("/", { replace: true });
+    } else {
+      toast.error("Invalid User ID or PIN. Contact your admin.");
+      setLoading(false);
+    }
   };
 
   return (
