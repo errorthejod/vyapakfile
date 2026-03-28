@@ -1,4 +1,4 @@
-import { Layout } from "@/components/Layout";
+import Layout from "@/components/Layout";
 import { motion } from "framer-motion";
 import { Receipt } from "lucide-react";
 

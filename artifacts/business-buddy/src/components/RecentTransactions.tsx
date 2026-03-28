@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
-import { useStore } from "@/store/useStore";
+import { useCurrentStore as useStore } from "@/store/useCurrentStore";
 
 export function RecentTransactions() {
   const { invoices } = useStore();

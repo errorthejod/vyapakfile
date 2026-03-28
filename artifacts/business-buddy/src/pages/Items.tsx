@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Layout } from "@/components/Layout";
-import { useStore } from "@/store/useStore";
+import Layout from "@/components/Layout";
+import { useCurrentStore as useStore } from "@/store/useCurrentStore";
 import { Item } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

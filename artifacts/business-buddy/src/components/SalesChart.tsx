@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useStore } from "@/store/useStore";
+import { useCurrentStore as useStore } from "@/store/useCurrentStore";
 
 export function SalesChart() {
   const { invoices } = useStore();

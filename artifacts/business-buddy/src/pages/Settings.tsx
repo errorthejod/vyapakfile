@@ -1,5 +1,5 @@
-import { Layout } from "@/components/Layout";
-import { useStore } from "@/store/useStore";
+import Layout from "@/components/Layout";
+import { useCurrentStore as useStore } from "@/store/useCurrentStore";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";

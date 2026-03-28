@@ -1,5 +1,5 @@
-import { Layout } from "@/components/Layout";
-import { useStore } from "@/store/useStore";
+import Layout from "@/components/Layout";
+import { useCurrentStore as useStore } from "@/store/useCurrentStore";
 import { SalesChart } from "@/components/SalesChart";
 import { motion } from "framer-motion";
 import { BarChart3, Users, ShoppingCart, TrendingUp } from "lucide-react";
