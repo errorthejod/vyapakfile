@@ -137,7 +137,7 @@ interface Props {
 }
 
 export function SaleFormDialog({ open, onClose }: Props) {
-  const { parties, items, invoices, addInvoice, shopInfo } = useStore();
+  const { parties, items, invoices, addInvoice, addParty, addItem, shopInfo } = useStore();
   const [savedInvoice, setSavedInvoice] = useState<Invoice | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
 
@@ -196,12 +196,51 @@ export function SaleFormDialog({ open, onClose }: Props) {
     if (!form.partyName) { toast.error("Please enter customer name"); return; }
     if (form.invoiceItems.some((i) => !i.name || i.amount <= 0)) { toast.error("Please fill all item details"); return; }
 
+    // Auto-save new party if not already in the list
+    const partyExists = parties.some(
+      (p) => p.name.trim().toLowerCase() === form.partyName.trim().toLowerCase()
+    );
+    let savedPartyId = form.partyId;
+    if (!partyExists) {
+      const newParty = {
+        id: `party-${Date.now()}`,
+        name: form.partyName.trim(),
+        phone: form.partyPhone || "",
+        address: form.partyAddress || "",
+        gst: form.partyGst || undefined,
+        type: "customer" as const,
+        balance: 0,
+        createdAt: new Date().toISOString(),
+      };
+      addParty(newParty);
+      savedPartyId = newParty.id;
+    }
+
+    // Auto-save new items if not already in the list
+    form.invoiceItems.forEach((invItem) => {
+      if (!invItem.name) return;
+      const itemExists = items.some(
+        (it) => it.name.trim().toLowerCase() === invItem.name.trim().toLowerCase()
+      );
+      if (!itemExists) {
+        addItem({
+          id: invItem.itemId || `item-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          name: invItem.name.trim(),
+          price: invItem.rate,
+          gstPercent: invItem.gstPercent,
+          stock: 0,
+          unit: invItem.unit || "pcs",
+          hsn: invItem.hsn,
+        });
+      }
+    });
+
     const invoice: Invoice = {
       id: Date.now().toString(),
       invoiceNumber: form.invoiceNumber,
       invoiceYear: form.invoiceYear,
       date: form.date,
-      partyId: form.partyId,
+      partyId: savedPartyId,
       partyName: form.partyName,
       partyAddress: form.partyAddress,
       partyPhone: form.partyPhone,
