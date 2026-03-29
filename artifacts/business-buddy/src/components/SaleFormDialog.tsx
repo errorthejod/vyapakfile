@@ -143,15 +143,8 @@ export function SaleFormDialog({ open, onClose }: Props) {
 
   const getNextInvoiceNum = (year = '', offset = 0) => {
     const count = invoices.filter((i) => i.type === "sale").length + 1 + offset;
-    const num = String(count).padStart(3, "0");
-    if (year) {
-      const parts = year.split('-');
-      const shortYear = parts.length === 2
-        ? `${parts[0].slice(-2)}-${parts[1].slice(-2)}`
-        : year;
-      return `GST/${shortYear}/${num}`;
-    }
-    return `GST/${num}`;
+    const num = String(count).padStart(4, "0");
+    return year ? `${year} inv.GST.${num}` : `inv.GST.${num}`;
   };
 
   const makeDefaultForm = () => {

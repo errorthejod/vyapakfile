@@ -96,34 +96,22 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
             {isNonGst && invoice.partyGst && <p style={{ fontSize: '10px', margin: '1px 0', fontWeight: '700' }}>NON-GST</p>}
           </div>
           <div style={{ minWidth: '230px', padding: '5px 8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
-              <p style={{ fontWeight: '700', fontSize: '11px', margin: 0 }}>Invoice Details</p>
-              {invoice.invoiceYear && (
-                <p style={{ fontSize: '10px', color: '#555', margin: 0 }}>{invoice.invoiceYear}</p>
-              )}
-            </div>
+            <p style={{ fontWeight: '700', fontSize: '11px', margin: '0 0 3px' }}>
+              Invoice Details {invoice.invoiceYear && <span style={{ fontWeight: '400', fontSize: '10px', color: '#555' }}>{invoice.invoiceYear}</span>}
+            </p>
             <table style={{ fontSize: '10px', borderSpacing: 0, width: '100%' }}>
               <tbody>
                 <tr>
                   <td style={{ color: '#555', paddingRight: '8px', paddingBottom: '2px', whiteSpace: 'nowrap' }}>Invoice No. :</td>
                   <td style={{ fontWeight: '600' }}>{invoice.invoiceNumber}</td>
                 </tr>
-                {shopInfo.state && (
-                  <tr>
-                    <td style={{ color: '#555', paddingRight: '8px', paddingBottom: '2px', whiteSpace: 'nowrap' }}>Place of supply :</td>
-                    <td style={{ fontWeight: '600' }}>{shopInfo.state}</td>
-                  </tr>
-                )}
+                <tr>
+                  <td style={{ color: '#555', paddingRight: '8px', paddingBottom: '2px', whiteSpace: 'nowrap' }}>Date :</td>
+                  <td style={{ fontWeight: '600' }}>{new Date(invoice.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                </tr>
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* ── DATE ROW ── */}
-        <div style={{ border: border, borderTop: 'none', padding: '3px 8px', backgroundColor: '#fafafa' }}>
-          <span style={{ fontSize: '10px', color: '#555' }}>
-            Date : <strong>{new Date(invoice.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</strong>
-          </span>
         </div>
 
         {/* ── ITEMS TABLE ── */}
