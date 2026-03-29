@@ -265,16 +265,16 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
           </div>
           {/* ── AUTHORISED SIGNATORY ── */}
           <div style={{ flex: 1, minWidth: 0, padding: '5px 8px', display: 'flex', flexDirection: 'column' }}>
-            {/* "For:" row — stamp sits beside the company name */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+            {/* "For:" row — centered */}
+            <div style={{ textAlign: 'center', marginBottom: '4px' }}>
               <p style={{ fontSize: '11px', fontWeight: '700', margin: 0 }}>For : {shopInfo.name}</p>
               {shopInfo.stampImage && (
                 <img src={shopInfo.stampImage} alt="Stamp"
-                  style={{ maxHeight: '36px', maxWidth: '60px', objectFit: 'contain' }} />
+                  style={{ maxHeight: '36px', maxWidth: '60px', objectFit: 'contain', marginTop: '4px' }} />
               )}
             </div>
-            {/* Signing space — signature image sits here when uploaded */}
-            <div style={{ flex: 1, minHeight: '55px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: '4px' }}>
+            {/* Signing space — signature image centered when uploaded */}
+            <div style={{ flex: 1, minHeight: '45px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: '4px' }}>
               {shopInfo.signatureImage && (
                 <img src={shopInfo.signatureImage} alt="Signature"
                   style={{ maxHeight: '48px', maxWidth: '110px', objectFit: 'contain' }} />
