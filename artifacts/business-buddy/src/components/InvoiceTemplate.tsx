@@ -210,31 +210,30 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
                     ₹ {invoice.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 1 })}
                   </td>
                 </tr>
-                {!isNonGst && (
-                  <>
-                    <tr style={{ borderBottom: border }}>
-                      <td style={{ padding: cellPad, color: '#333' }}>
-                        SGST @ {invoice.items[0]?.gstPercent ? invoice.items[0].gstPercent / 2 : 9}%
-                      </td>
-                      <td style={{ padding: cellPad, textAlign: 'right' }}>
-                        ₹ {invoice.totalSgst.toLocaleString('en-IN', { minimumFractionDigits: 1 })}
-                      </td>
-                    </tr>
-                    <tr style={{ borderBottom: border }}>
-                      <td style={{ padding: cellPad, color: '#333' }}>
-                        CGST @ {invoice.items[0]?.gstPercent ? invoice.items[0].gstPercent / 2 : 9}%
-                      </td>
-                      <td style={{ padding: cellPad, textAlign: 'right' }}>
-                        ₹ {invoice.totalCgst.toLocaleString('en-IN', { minimumFractionDigits: 1 })}
-                      </td>
-                    </tr>
-                  </>
-                )}
-                {isNonGst && (
-                  <tr style={{ borderBottom: border }}>
-                    <td style={{ padding: cellPad, color: '#666', fontSize: '10px' }} colSpan={2}>NON-GST Invoice</td>
-                  </tr>
-                )}
+                <tr style={{ borderBottom: border }}>
+                  <td style={{ padding: cellPad, color: '#333' }}>
+                    SGST @ {invoice.items[0]?.gstPercent ? invoice.items[0].gstPercent / 2 : 9}%
+                  </td>
+                  <td style={{ padding: cellPad, textAlign: 'right' }}>
+                    ₹ {invoice.totalSgst.toLocaleString('en-IN', { minimumFractionDigits: 1 })}
+                  </td>
+                </tr>
+                <tr style={{ borderBottom: border }}>
+                  <td style={{ padding: cellPad, color: '#333' }}>
+                    CGST @ {invoice.items[0]?.gstPercent ? invoice.items[0].gstPercent / 2 : 9}%
+                  </td>
+                  <td style={{ padding: cellPad, textAlign: 'right' }}>
+                    ₹ {invoice.totalCgst.toLocaleString('en-IN', { minimumFractionDigits: 1 })}
+                  </td>
+                </tr>
+                <tr style={{ borderBottom: border }}>
+                  <td style={{ padding: cellPad, color: '#333' }}>
+                    IGST <span style={{ fontSize: '9px', color: '#888' }}>(CGST+SGST)</span>
+                  </td>
+                  <td style={{ padding: cellPad, textAlign: 'right' }}>
+                    ₹ {(invoice.igst ?? (invoice.totalCgst + invoice.totalSgst)).toLocaleString('en-IN', { minimumFractionDigits: 1 })}
+                  </td>
+                </tr>
                 <tr style={{ borderBottom: border, backgroundColor: '#f0f0f0', fontWeight: '700' }}>
                   <td style={{ padding: cellPad }}>Total</td>
                   <td style={{ padding: cellPad, textAlign: 'right' }}>
