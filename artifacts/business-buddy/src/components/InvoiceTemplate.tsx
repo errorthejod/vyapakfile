@@ -264,7 +264,9 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
             ))}
           </div>
           {/* ── AUTHORISED SIGNATORY ── */}
-          <div style={{ flex: 1, minWidth: 0, padding: '5px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ flex: 1, minWidth: 0, padding: '5px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+            {/* spacer fills top */}
+            <div style={{ flex: 1 }} />
             <p style={{ fontSize: '11px', fontWeight: '700', margin: '0 0 4px', textAlign: 'center' }}>For : {shopInfo.name}</p>
             {/* Signature + stamp row */}
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '8px', minHeight: '52px', marginBottom: '4px' }}>
