@@ -85,11 +85,11 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
 
         {/* ── BILL TO + INVOICE DETAILS ── */}
         <div style={{ display: 'flex', gap: '0', border: border }}>
-          <div style={{ flex: 1, padding: '5px 8px', borderRight: border }}>
+          <div style={{ flex: '1 1 0', minWidth: 0, maxWidth: '60%', padding: '5px 8px', borderRight: border }}>
             <p style={{ fontWeight: '700', fontSize: '11px', margin: '0 0 2px' }}>Bill To</p>
-            <p style={{ fontWeight: '700', fontSize: '12px', margin: '1px 0', textTransform: 'uppercase' }}>{invoice.partyName}</p>
+            <p style={{ fontWeight: '700', fontSize: '12px', margin: '1px 0', textTransform: 'uppercase', wordBreak: 'break-word' }}>{invoice.partyName}</p>
             {invoice.partyAddress && (
-              <div style={{ margin: '1px 0' }}>
+              <div style={{ margin: '1px 0', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                 <span style={{ fontSize: '10px', color: '#555' }}>Address : </span>
                 {addressLines(invoice.partyAddress).map((line, i) => (
                   <span key={i} style={{ fontSize: '10px' }}>{line}{i < addressLines(invoice.partyAddress).length - 1 ? ', ' : ''}</span>
@@ -107,7 +107,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
             {invoice.partyGst && !isNonGst && <p style={{ fontSize: '10px', margin: '1px 0' }}>GSTIN : {invoice.partyGst}</p>}
             {isNonGst && invoice.partyGst && <p style={{ fontSize: '10px', margin: '1px 0', fontWeight: '700' }}>NON-GST</p>}
           </div>
-          <div style={{ minWidth: '230px', padding: '5px 8px' }}>
+          <div style={{ flex: '0 0 auto', minWidth: '200px', padding: '5px 8px' }}>
             <p style={{ fontWeight: '700', fontSize: '11px', margin: '0 0 3px' }}>
               Invoice Details {invoice.invoiceYear && <span style={{ fontWeight: '400', fontSize: '10px', color: '#555' }}>{invoice.invoiceYear}</span>}
             </p>
