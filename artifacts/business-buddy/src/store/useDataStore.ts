@@ -170,6 +170,30 @@ export const useDataStore = create<DataStore>()(
           },
         })),
 
+      updateInvoice: (userId: string, invoiceId: string, updates: Partial<Invoice>) =>
+        set(s => ({
+          allData: {
+            ...s.allData,
+            [userId]: {
+              ...s.allData[userId],
+              invoices: (s.allData[userId]?.invoices || []).map(inv =>
+                inv.id === invoiceId ? { ...inv, ...updates } : inv
+              ),
+            },
+          },
+        })),
+
+      deleteInvoice: (userId: string, invoiceId: string) =>
+        set(s => ({
+          allData: {
+            ...s.allData,
+            [userId]: {
+              ...s.allData[userId],
+              invoices: (s.allData[userId]?.invoices || []).filter(inv => inv.id !== invoiceId),
+            },
+          },
+        })),
+
       updateShopInfo: (userId, info) =>
         set(s => ({
           allData: {

@@ -29,6 +29,8 @@ export function useCurrentStore() {
     deleteItem: (id: string) => store.deleteItem(currentUserId, id),
 
     addInvoice: (invoice: Invoice) => store.addInvoice(currentUserId, invoice),
+    updateInvoice: (id: string, updates: Partial<Invoice>) => store.updateInvoice(currentUserId, id, updates),
+    deleteInvoice: (id: string) => store.deleteInvoice(currentUserId, id),
     updateShopInfo: (info: Partial<ShopInfo>) => store.updateShopInfo(currentUserId, info),
   };
 }

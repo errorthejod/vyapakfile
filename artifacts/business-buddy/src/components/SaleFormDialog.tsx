@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useCurrentStore as useStore } from "@/store/useCurrentStore";
 import { InvoiceItem, Invoice } from "@/types";
 import { InvoiceTemplate } from "@/components/InvoiceTemplate";
@@ -134,10 +134,12 @@ const calcFromAmount = (item: InvoiceItem): InvoiceItem => {
 interface Props {
   open: boolean;
   onClose: () => void;
+  editInvoice?: Invoice | null;
 }
 
-export function SaleFormDialog({ open, onClose }: Props) {
-  const { parties, items, invoices, addInvoice, addParty, addItem, shopInfo } = useStore();
+export function SaleFormDialog({ open, onClose, editInvoice }: Props) {
+  const { parties, items, invoices, addInvoice, updateInvoice, addParty, addItem, shopInfo } = useStore();
+  const isEditMode = !!editInvoice;
   const [savedInvoice, setSavedInvoice] = useState<Invoice | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
 
@@ -151,6 +153,20 @@ export function SaleFormDialog({ open, onClose }: Props) {
   };
 
   const makeDefaultForm = () => {
+    if (editInvoice) {
+      return {
+        partyId: editInvoice.partyId || "",
+        partyName: editInvoice.partyName,
+        partyAddress: editInvoice.partyAddress || "",
+        partyPhone: editInvoice.partyPhone || "",
+        partyGst: editInvoice.partyGst || "",
+        date: editInvoice.date,
+        invoiceItems: editInvoice.items.length > 0 ? editInvoice.items : [emptyItem()],
+        invoiceYear: editInvoice.invoiceYear || getFinancialYear(editInvoice.date),
+        invoiceNumber: editInvoice.invoiceNumber,
+        description: editInvoice.description || "",
+      };
+    }
     const today = new Date().toISOString().split("T")[0];
     const fy = getFinancialYear(today);
     return {
@@ -164,6 +180,14 @@ export function SaleFormDialog({ open, onClose }: Props) {
   };
 
   const [form, setForm] = useState(makeDefaultForm());
+
+  useEffect(() => {
+    if (open) {
+      setForm(makeDefaultForm());
+      setSavedInvoice(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editInvoice]);
 
   const updateItem = (index: number, updates: Partial<InvoiceItem>, fromAmount = false) => {
     setForm((prev) => {
@@ -236,7 +260,7 @@ export function SaleFormDialog({ open, onClose }: Props) {
     });
 
     const invoice: Invoice = {
-      id: Date.now().toString(),
+      id: isEditMode ? editInvoice!.id : Date.now().toString(),
       invoiceNumber: form.invoiceNumber,
       invoiceYear: form.invoiceYear,
       date: form.date,
@@ -251,21 +275,28 @@ export function SaleFormDialog({ open, onClose }: Props) {
       totalAmount,
       description: form.description || undefined,
       type: "sale",
-      createdAt: new Date().toISOString(),
+      createdAt: isEditMode ? editInvoice!.createdAt : new Date().toISOString(),
     };
-    addInvoice(invoice);
-    toast.success(`Invoice ${form.invoiceNumber} saved!`);
-    setSavedInvoice(invoice);
-    const today = new Date().toISOString().split("T")[0];
-    const fy = getFinancialYear(today);
-    setForm({
-      partyId: "", partyName: "", partyAddress: "", partyPhone: "", partyGst: "",
-      date: today,
-      invoiceItems: [emptyItem()],
-      invoiceYear: fy,
-      invoiceNumber: getNextInvoiceNum(false, 1),
-      description: "",
-    });
+
+    if (isEditMode) {
+      updateInvoice(editInvoice!.id, invoice);
+      toast.success(`Invoice ${form.invoiceNumber} updated!`);
+      setSavedInvoice(invoice);
+    } else {
+      addInvoice(invoice);
+      toast.success(`Invoice ${form.invoiceNumber} saved!`);
+      setSavedInvoice(invoice);
+      const today = new Date().toISOString().split("T")[0];
+      const fy = getFinancialYear(today);
+      setForm({
+        partyId: "", partyName: "", partyAddress: "", partyPhone: "", partyGst: "",
+        date: today,
+        invoiceItems: [emptyItem()],
+        invoiceYear: fy,
+        invoiceNumber: getNextInvoiceNum(false, 1),
+        description: "",
+      });
+    }
   };
 
   const handlePrint = (invoice: Invoice) => {
