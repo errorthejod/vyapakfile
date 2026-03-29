@@ -62,8 +62,17 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
             )}
             {shopInfo.state && <p style={{ fontSize: '10px', margin: '1px 0' }}>State : {shopInfo.state}</p>}
           </div>
-          <div style={{ textAlign: 'right', fontSize: '10px' }}>
-            <p style={{ fontWeight: '700', margin: '0 0 2px', fontSize: '11px', borderBottom: '1px solid #000', paddingBottom: '2px' }}>ORIGINAL FOR RECIPIENT</p>
+          {/* TOP RIGHT: Logo or "ORIGINAL FOR RECIPIENT" */}
+          <div style={{ textAlign: 'right', fontSize: '10px', minWidth: '110px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            {shopInfo.logoImage ? (
+              <img
+                src={shopInfo.logoImage}
+                alt="Company Logo"
+                style={{ maxHeight: '65px', maxWidth: '130px', objectFit: 'contain' }}
+              />
+            ) : (
+              <p style={{ fontWeight: '700', margin: '0', fontSize: '10px', borderBottom: '1px solid #000', paddingBottom: '2px' }}>ORIGINAL FOR RECIPIENT</p>
+            )}
           </div>
         </div>
 
@@ -86,7 +95,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
             {invoice.partyGst && !isNonGst && <p style={{ fontSize: '10px', margin: '1px 0' }}>GSTIN : {invoice.partyGst}</p>}
             {isNonGst && invoice.partyGst && <p style={{ fontSize: '10px', margin: '1px 0', fontWeight: '700' }}>NON-GST</p>}
           </div>
-          <div style={{ minWidth: '210px', padding: '5px 8px' }}>
+          <div style={{ minWidth: '230px', padding: '5px 8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
               <p style={{ fontWeight: '700', fontSize: '11px', margin: 0 }}>Invoice Details</p>
               {invoice.invoiceYear && (
@@ -111,7 +120,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
         </div>
 
         {/* ── DATE ROW ── */}
-        <div style={{ border: border, borderTop: 'none', padding: '3px 8px', display: 'flex', gap: '20px', backgroundColor: '#fafafa' }}>
+        <div style={{ border: border, borderTop: 'none', padding: '3px 8px', backgroundColor: '#fafafa' }}>
           <span style={{ fontSize: '10px', color: '#555' }}>
             Date : <strong>{new Date(invoice.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</strong>
           </span>
@@ -193,7 +202,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
               <p style={{ fontSize: '10px', margin: 0, fontStyle: 'italic' }}>{toWords(invoice.totalAmount)} Rupees Only</p>
             </div>
           </div>
-          <div style={{ minWidth: '200px' }}>
+          <div style={{ minWidth: '215px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
               <tbody>
                 <tr style={{ borderBottom: border }}>
@@ -249,20 +258,42 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
         </div>
 
         {/* ── TERMS + SIGNATORY ── */}
-        <div style={{ display: 'flex', border: border, borderTop: 'none', minHeight: '75px' }}>
+        <div style={{ display: 'flex', border: border, borderTop: 'none', minHeight: '100px' }}>
           <div style={{ flex: 1, borderRight: border, padding: '5px 8px' }}>
             <p style={{ fontWeight: '700', fontSize: '11px', margin: '0 0 2px' }}>Terms and Conditions</p>
             {termsLines.map((line, i) => (
               <p key={i} style={{ fontSize: '10px', margin: '1px 0', color: '#333' }}>{line}</p>
             ))}
           </div>
-          <div style={{ minWidth: '200px', padding: '5px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <p style={{ fontSize: '11px', fontWeight: '700', margin: '0 0 36px', textAlign: 'center' }}>For : {shopInfo.name}</p>
+          {/* ── AUTHORISED SIGNATORY ── */}
+          <div style={{ minWidth: '260px', padding: '5px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <p style={{ fontSize: '11px', fontWeight: '700', margin: '0 0 4px', textAlign: 'center' }}>For : {shopInfo.name}</p>
+            {/* Signature + stamp row */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '8px', minHeight: '52px', marginBottom: '4px' }}>
+              {shopInfo.signatureImage ? (
+                <img
+                  src={shopInfo.signatureImage}
+                  alt="Signature"
+                  style={{ maxHeight: '50px', maxWidth: '110px', objectFit: 'contain' }}
+                />
+              ) : (
+                <div style={{ width: '110px', height: '50px' }} />
+              )}
+              {shopInfo.stampImage ? (
+                <img
+                  src={shopInfo.stampImage}
+                  alt="Stamp"
+                  style={{ maxHeight: '50px', maxWidth: '80px', objectFit: 'contain' }}
+                />
+              ) : (
+                <div style={{ width: '80px', height: '50px' }} />
+              )}
+            </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ borderTop: '1px solid #555', paddingTop: '3px' }}>
                 <p style={{ fontSize: '10px', fontWeight: '600', margin: 0 }}>Authorised Signatory</p>
               </div>
-              <p style={{ fontSize: '10px', fontWeight: '700', margin: '4px 0 0', textTransform: 'uppercase' }}>{shopInfo.name}</p>
+              <p style={{ fontSize: '10px', fontWeight: '700', margin: '3px 0 0', textTransform: 'uppercase' }}>{shopInfo.name}</p>
               {shopInfo.address && (
                 <p style={{ fontSize: '9px', margin: '1px 0', color: '#444' }}>
                   {addressLines(shopInfo.address).slice(-2).join(', ')}

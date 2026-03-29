@@ -62,6 +62,9 @@ export interface ShopInfo {
   gtNo?: string;
   state?: string;
   termsAndConditions?: string;
+  logoImage?: string;
+  signatureImage?: string;
+  stampImage?: string;
 }
 
 export interface MonthlySales {
