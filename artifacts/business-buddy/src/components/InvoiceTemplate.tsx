@@ -257,14 +257,14 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
 
         {/* ── TERMS + SIGNATORY ── */}
         <div style={{ display: 'flex', border: border, borderTop: 'none', minHeight: '100px' }}>
-          <div style={{ flex: 1, borderRight: border, padding: '5px 8px' }}>
+          <div style={{ flex: 1, minWidth: 0, borderRight: border, padding: '5px 8px' }}>
             <p style={{ fontWeight: '700', fontSize: '11px', margin: '0 0 2px' }}>Terms and Conditions</p>
             {termsLines.map((line, i) => (
               <p key={i} style={{ fontSize: '10px', margin: '1px 0', color: '#333' }}>{line}</p>
             ))}
           </div>
           {/* ── AUTHORISED SIGNATORY ── */}
-          <div style={{ minWidth: '260px', padding: '5px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ flex: 1, minWidth: 0, padding: '5px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <p style={{ fontSize: '11px', fontWeight: '700', margin: '0 0 4px', textAlign: 'center' }}>For : {shopInfo.name}</p>
             {/* Signature + stamp row */}
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '8px', minHeight: '52px', marginBottom: '4px' }}>
