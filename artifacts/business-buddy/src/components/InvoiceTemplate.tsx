@@ -264,39 +264,29 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
             ))}
           </div>
           {/* ── AUTHORISED SIGNATORY ── */}
-          <div style={{ flex: 1, minWidth: 0, padding: '5px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
-            <p style={{ fontSize: '11px', fontWeight: '700', margin: '0 0 4px', textAlign: 'center' }}>For : {shopInfo.name}</p>
-            {/* Signature + stamp row */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '8px', minHeight: '52px', marginBottom: '4px' }}>
-              {shopInfo.signatureImage ? (
+          <div style={{ flex: 1, minWidth: 0, padding: '5px 8px', display: 'flex', flexDirection: 'column' }}>
+            <p style={{ fontSize: '11px', fontWeight: '700', margin: '0 0 6px', textAlign: 'center' }}>For : {shopInfo.name}</p>
+            {/* Blank signing space with optional signature + stamp side by side */}
+            <div style={{ flex: 1, minHeight: '55px', display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '10px', paddingBottom: '4px' }}>
+              {shopInfo.signatureImage && (
                 <img
                   src={shopInfo.signatureImage}
                   alt="Signature"
-                  style={{ maxHeight: '50px', maxWidth: '110px', objectFit: 'contain' }}
+                  style={{ maxHeight: '48px', maxWidth: '110px', objectFit: 'contain' }}
                 />
-              ) : (
-                <div style={{ width: '110px', height: '50px' }} />
               )}
-              {shopInfo.stampImage ? (
+              {shopInfo.stampImage && (
                 <img
                   src={shopInfo.stampImage}
                   alt="Stamp"
-                  style={{ maxHeight: '50px', maxWidth: '80px', objectFit: 'contain' }}
+                  style={{ maxHeight: '48px', maxWidth: '80px', objectFit: 'contain' }}
                 />
-              ) : (
-                <div style={{ width: '80px', height: '50px' }} />
               )}
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ borderTop: '1px solid #555', paddingTop: '3px' }}>
-                <p style={{ fontSize: '10px', fontWeight: '600', margin: 0 }}>Authorised Signatory</p>
-              </div>
-              <p style={{ fontSize: '10px', fontWeight: '700', margin: '3px 0 0', textTransform: 'uppercase' }}>{shopInfo.name}</p>
-              {shopInfo.address && (
-                <p style={{ fontSize: '9px', margin: '1px 0', color: '#444' }}>
-                  {addressLines(shopInfo.address).slice(-2).join(', ')}
-                </p>
-              )}
+            {/* Authorised Signatory label — no address */}
+            <div style={{ textAlign: 'center', borderTop: '1px solid #555', paddingTop: '3px', paddingBottom: '10px' }}>
+              <p style={{ fontSize: '10px', fontWeight: '600', margin: 0 }}>Authorised Signatory</p>
+              <p style={{ fontSize: '10px', fontWeight: '700', margin: '2px 0 0', textTransform: 'uppercase' }}>{shopInfo.name}</p>
             </div>
           </div>
         </div>
