@@ -47,6 +47,8 @@ const sampleData: UserData = {
     phone: '8851711152',
     gst: '07AFLPN1298M2ZR',
     email: 'shuvidhatelecom@gmail.com',
+    state: '07-Delhi',
+    termsAndConditions: '1. All phones will be under warranty from the service center and not from the dealer.\n2. The customer has to visit the service center.\n3. Sold goods will not be returned.\n4. All phone are repaired here.\n5. Damage item is not exchange.',
   },
 };
 
@@ -188,6 +190,12 @@ export const useDataStore = create<DataStore>()(
           state.allData['BB001'].shopInfo.phone = '8851711152';
           state.allData['BB001'].shopInfo.gst = '07AFLPN1298M2ZR';
           state.allData['BB001'].shopInfo.email = 'shuvidhatelecom@gmail.com';
+          if (!state.allData['BB001'].shopInfo.state) {
+            state.allData['BB001'].shopInfo.state = '07-Delhi';
+          }
+          if (!state.allData['BB001'].shopInfo.termsAndConditions) {
+            state.allData['BB001'].shopInfo.termsAndConditions = '1. All phones will be under warranty from the service center and not from the dealer.\n2. The customer has to visit the service center.\n3. Sold goods will not be returned.\n4. All phone are repaired here.\n5. Damage item is not exchange.';
+          }
         }
       },
     }

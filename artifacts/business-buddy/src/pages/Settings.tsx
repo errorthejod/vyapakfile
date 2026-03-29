@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Store, Phone, Mail, MapPin, FileText, Hash } from "lucide-react";
+import { Store, Phone, Mail, MapPin, FileText, Hash, ScrollText, Globe } from "lucide-react";
 
 const SettingsPage = () => {
   const { shopInfo, updateShopInfo } = useStore();
@@ -115,7 +115,55 @@ const SettingsPage = () => {
               </div>
             </div>
 
+            <div>
+              <Label className="flex items-center gap-1.5 mb-1.5 text-sm font-medium">
+                <Globe className="h-3.5 w-3.5 text-primary" /> State (for invoice)
+              </Label>
+              <Input
+                value={form.state || ""}
+                onChange={e => setForm({ ...form, state: e.target.value })}
+                placeholder="e.g. 07-Delhi"
+                className="text-sm"
+              />
+            </div>
+
             <div className="pt-2">
+              <Button onClick={handleSave} className="px-8">
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="bg-card rounded-xl card-shadow max-w-2xl overflow-hidden"
+        >
+          <div className="flex items-center gap-3 px-6 py-4 border-b bg-primary/5">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <ScrollText className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-heading font-semibold">Terms & Conditions</h3>
+              <p className="text-xs text-muted-foreground">Printed at the bottom of every invoice</p>
+            </div>
+          </div>
+
+          <div className="p-6">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
+              Terms & Conditions text (one line per condition)
+            </Label>
+            <textarea
+              value={form.termsAndConditions ?? "1. Goods once sold will not be taken back.\n2. Subject to local jurisdiction only.\n3. All disputes subject to local jurisdiction."}
+              onChange={e => setForm({ ...form, termsAndConditions: e.target.value })}
+              rows={6}
+              placeholder={"1. Goods once sold will not be taken back.\n2. Subject to local jurisdiction only."}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <p className="text-xs text-muted-foreground mt-2">Each line will appear as a separate condition on the invoice.</p>
+            <div className="pt-4">
               <Button onClick={handleSave} className="px-8">
                 Save Changes
               </Button>

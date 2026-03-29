@@ -22,7 +22,9 @@ export interface Item {
 export interface InvoiceItem {
   itemId: string;
   name: string;
+  hsn?: string;
   qty: number;
+  unit?: string;
   rate: number;
   gstPercent: number;
   amount: number;
@@ -46,6 +48,7 @@ export interface Invoice {
   totalSgst: number;
   igst?: number;
   totalAmount: number;
+  description?: string;
   type: 'sale' | 'purchase';
   createdAt: string;
 }
@@ -57,6 +60,8 @@ export interface ShopInfo {
   gst: string;
   email?: string;
   gtNo?: string;
+  state?: string;
+  termsAndConditions?: string;
 }
 
 export interface MonthlySales {

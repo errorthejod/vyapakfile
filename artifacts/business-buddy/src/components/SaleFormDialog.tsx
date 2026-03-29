@@ -154,6 +154,7 @@ export function SaleFormDialog({ open, onClose }: Props) {
       invoiceItems: [emptyItem()],
       invoiceYear: getFinancialYear(today),
       invoiceNumber: getNextInvoiceNum(),
+      description: "",
     };
   };
 
@@ -195,6 +196,7 @@ export function SaleFormDialog({ open, onClose }: Props) {
       subtotal, totalCgst, totalSgst,
       igst,
       totalAmount,
+      description: form.description || undefined,
       type: "sale",
       createdAt: new Date().toISOString(),
     };
@@ -384,8 +386,8 @@ export function SaleFormDialog({ open, onClose }: Props) {
                         <ProductInput
                           value={item.name}
                           items={items}
-                          onChange={(name, itemId, rate, gstPercent) => {
-                            updateItem(i, { name, itemId: itemId || "", rate: rate || 0, gstPercent: gstPercent || 18 });
+                          onChange={(name, itemId, rate, gstPercent, unit) => {
+                            updateItem(i, { name, itemId: itemId || "", rate: rate || 0, gstPercent: gstPercent || 18, unit: unit || item.unit });
                           }}
                         />
                       </div>
@@ -434,8 +436,20 @@ export function SaleFormDialog({ open, onClose }: Props) {
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <div className="w-72 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-border overflow-hidden">
+              <div className="flex gap-4 items-start">
+                <div className="flex-1">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">
+                    Description <span className="text-muted-foreground/60 normal-case">(serial no., notes, etc.)</span>
+                  </Label>
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                    placeholder="e.g. SR NO 25BBR... or any additional notes"
+                    rows={4}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div className="w-72 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-border overflow-hidden shrink-0">
                   <div className="px-4 py-2 space-y-1.5">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Sub Total</span>
