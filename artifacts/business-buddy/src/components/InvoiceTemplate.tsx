@@ -144,7 +144,6 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
           </thead>
           <tbody>
             {invoice.items.map((item, i) => {
-              const base = item.amount - item.cgst - item.sgst;
               const gstAmt = item.cgst + item.sgst;
               return (
                 <tr key={i} style={{ borderBottom: border }}>
@@ -164,7 +163,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
                     )}
                   </td>
                   <td style={{ padding: cellPad, textAlign: 'right', fontSize: '10px', fontWeight: '600' }}>
-                    ₹ {base.toLocaleString('en-IN', { minimumFractionDigits: 1 })}
+                    ₹ {item.amount.toLocaleString('en-IN', { minimumFractionDigits: 1 })}
                   </td>
                 </tr>
               );
@@ -182,7 +181,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
                 {isNonGst ? '-' : `₹ ${totalGstAmt.toLocaleString('en-IN', { minimumFractionDigits: 1 })}`}
               </td>
               <td style={{ padding: cellPad, textAlign: 'right', fontSize: '11px' }}>
-                ₹ {invoice.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 1 })}
+                ₹ {invoice.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 1 })}
               </td>
             </tr>
           </tfoot>
