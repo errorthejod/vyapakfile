@@ -56,12 +56,14 @@ const SettingsPage = () => {
             <div>
               <Label className="flex items-center gap-1.5 mb-1.5 text-sm font-medium">
                 <MapPin className="h-3.5 w-3.5 text-primary" /> Address
+                <span className="text-xs font-normal text-muted-foreground">(press Enter to add new line)</span>
               </Label>
-              <Input
+              <textarea
                 value={form.address}
                 onChange={e => setForm({ ...form, address: e.target.value })}
-                placeholder="Shop address, city, state"
-                className="text-sm"
+                placeholder={"Shop No., Street\nCity, State - PIN"}
+                rows={3}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 

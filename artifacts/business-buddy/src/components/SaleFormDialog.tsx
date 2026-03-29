@@ -141,19 +141,28 @@ export function SaleFormDialog({ open, onClose }: Props) {
   const [savedInvoice, setSavedInvoice] = useState<Invoice | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
 
-  const getNextInvoiceNum = (offset = 0) => {
+  const getNextInvoiceNum = (year = '', offset = 0) => {
     const count = invoices.filter((i) => i.type === "sale").length + 1 + offset;
-    return `INV-${String(count).padStart(3, "0")}`;
+    const num = String(count).padStart(3, "0");
+    if (year) {
+      const parts = year.split('-');
+      const shortYear = parts.length === 2
+        ? `${parts[0].slice(-2)}-${parts[1].slice(-2)}`
+        : year;
+      return `GST/${shortYear}/${num}`;
+    }
+    return `GST/${num}`;
   };
 
   const makeDefaultForm = () => {
     const today = new Date().toISOString().split("T")[0];
+    const fy = getFinancialYear(today);
     return {
       partyId: "", partyName: "", partyAddress: "", partyPhone: "", partyGst: "",
       date: today,
       invoiceItems: [emptyItem()],
-      invoiceYear: getFinancialYear(today),
-      invoiceNumber: getNextInvoiceNum(),
+      invoiceYear: fy,
+      invoiceNumber: getNextInvoiceNum(fy),
       description: "",
     };
   };
@@ -204,12 +213,14 @@ export function SaleFormDialog({ open, onClose }: Props) {
     toast.success(`Invoice ${form.invoiceNumber} saved!`);
     setSavedInvoice(invoice);
     const today = new Date().toISOString().split("T")[0];
+    const fy = getFinancialYear(today);
     setForm({
       partyId: "", partyName: "", partyAddress: "", partyPhone: "", partyGst: "",
       date: today,
       invoiceItems: [emptyItem()],
-      invoiceYear: getFinancialYear(today),
-      invoiceNumber: getNextInvoiceNum(1),
+      invoiceYear: fy,
+      invoiceNumber: getNextInvoiceNum(fy, 1),
+      description: "",
     });
   };
 
