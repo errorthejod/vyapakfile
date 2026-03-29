@@ -141,10 +141,13 @@ export function SaleFormDialog({ open, onClose }: Props) {
   const [savedInvoice, setSavedInvoice] = useState<Invoice | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
 
-  const getNextInvoiceNum = (year = '', offset = 0) => {
+  const isAllNonGst = (invoiceItems: InvoiceItem[]) =>
+    invoiceItems.length > 0 && invoiceItems.every((it) => it.gstPercent === 0);
+
+  const getNextInvoiceNum = (nonGst = false, offset = 0) => {
     const count = invoices.filter((i) => i.type === "sale").length + 1 + offset;
     const num = String(count).padStart(4, "0");
-    return year ? `${year} inv.GST.${num}` : `inv.GST.${num}`;
+    return nonGst ? `inv.non-gst.${num}` : `inv.GST.${num}`;
   };
 
   const makeDefaultForm = () => {
@@ -155,7 +158,7 @@ export function SaleFormDialog({ open, onClose }: Props) {
       date: today,
       invoiceItems: [emptyItem()],
       invoiceYear: fy,
-      invoiceNumber: getNextInvoiceNum(fy),
+      invoiceNumber: getNextInvoiceNum(false),
       description: "",
     };
   };
@@ -167,7 +170,16 @@ export function SaleFormDialog({ open, onClose }: Props) {
       const newItems = [...prev.invoiceItems];
       const merged = { ...newItems[index], ...updates };
       newItems[index] = fromAmount ? calcFromAmount(merged) : calcFromRate(merged);
-      return { ...prev, invoiceItems: newItems };
+
+      let invoiceNumber = prev.invoiceNumber;
+      if ('gstPercent' in updates) {
+        const nonGst = isAllNonGst(newItems);
+        invoiceNumber = invoiceNumber
+          .replace(/inv\.non-gst\./i, nonGst ? 'inv.non-gst.' : 'inv.GST.')
+          .replace(/inv\.GST\./i, nonGst ? 'inv.non-gst.' : 'inv.GST.');
+      }
+
+      return { ...prev, invoiceItems: newItems, invoiceNumber };
     });
   };
 
@@ -212,7 +224,7 @@ export function SaleFormDialog({ open, onClose }: Props) {
       date: today,
       invoiceItems: [emptyItem()],
       invoiceYear: fy,
-      invoiceNumber: getNextInvoiceNum(fy, 1),
+      invoiceNumber: getNextInvoiceNum(false, 1),
       description: "",
     });
   };
@@ -409,7 +421,9 @@ export function SaleFormDialog({ open, onClose }: Props) {
                         <Select value={String(item.gstPercent)} onValueChange={(v) => updateItem(i, { gstPercent: Number(v) })}>
                           <SelectTrigger className="text-xs h-8 px-1"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            {[0, 5, 12, 18, 28].map((g) => <SelectItem key={g} value={String(g)}>{g}%</SelectItem>)}
+                            {([0, 0.25, 3, 5, 12, 18, 28, 40] as number[]).map((g) => (
+                              <SelectItem key={g} value={String(g)}>{g === 0 ? 'Non-GST' : `${g}%`}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
