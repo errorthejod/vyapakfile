@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { db, usersTable, adminConfigTable } from "@workspace/db";
+import { db, usersTable, adminConfigTable, pool } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { logger } from "../lib/logger";
 
 const router = Router();
 
@@ -25,12 +26,23 @@ async function ensureDefaultUser() {
   }
 }
 
+export async function warmupDb() {
+  try {
+    const client = await pool.connect();
+    client.release();
+    logger.info("Database connection pool warmed up");
+  } catch (err) {
+    logger.error({ err }, "Failed to warm up database connection pool");
+  }
+}
+
 router.get("/users", async (_req, res) => {
   try {
     await ensureDefaultUser();
     const users = await db.select().from(usersTable).orderBy(usersTable.createdAt);
     res.json({ users });
   } catch (err) {
+    logger.error({ err }, "Failed to fetch users");
     res.status(500).json({ error: "Failed to fetch users" });
   }
 });
@@ -47,6 +59,7 @@ router.post("/users/login", async (req, res) => {
     if (!user) return res.status(401).json({ error: "Invalid name or password" });
     res.json({ user });
   } catch (err) {
+    logger.error({ err }, "Login failed");
     res.status(500).json({ error: "Login failed" });
   }
 });
@@ -62,6 +75,7 @@ router.post("/users", async (req, res) => {
     await db.update(adminConfigTable).set({ nextUserNum: num + 1 }).where(eq(adminConfigTable.id, 1));
     res.json({ user });
   } catch (err) {
+    logger.error({ err }, "Failed to create user");
     res.status(500).json({ error: "Failed to create user" });
   }
 });
@@ -74,6 +88,7 @@ router.put("/users/:id", async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json({ user });
   } catch (err) {
+    logger.error({ err }, "Failed to update user");
     res.status(500).json({ error: "Failed to update user" });
   }
 });
@@ -84,6 +99,7 @@ router.delete("/users/:id", async (req, res) => {
     await db.delete(usersTable).where(eq(usersTable.id, id));
     res.json({ ok: true });
   } catch (err) {
+    logger.error({ err }, "Failed to delete user");
     res.status(500).json({ error: "Failed to delete user" });
   }
 });
@@ -93,6 +109,7 @@ router.get("/admin/config", async (_req, res) => {
     const config = await ensureAdminConfig();
     res.json({ adminPassword: config.adminPassword });
   } catch (err) {
+    logger.error({ err }, "Failed to fetch config");
     res.status(500).json({ error: "Failed to fetch config" });
   }
 });
@@ -105,6 +122,7 @@ router.put("/admin/config", async (req, res) => {
     await db.update(adminConfigTable).set({ adminPassword }).where(eq(adminConfigTable.id, 1));
     res.json({ ok: true });
   } catch (err) {
+    logger.error({ err }, "Failed to update config");
     res.status(500).json({ error: "Failed to update config" });
   }
 });
