@@ -3,19 +3,22 @@ import Layout from "@/components/Layout";
 import { useCurrentStore as useStore } from "@/store/useCurrentStore";
 import { Invoice } from "@/types";
 import { InvoiceTemplate } from "@/components/InvoiceTemplate";
+import { SaleFormDialog } from "@/components/SaleFormDialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Eye, Printer, Download, FileText } from "lucide-react";
+import { Eye, Printer, Download, FileText, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 const Sales = () => {
-  const { invoices, shopInfo } = useStore();
+  const { invoices, shopInfo, deleteInvoice } = useStore();
   const [showInvoice, setShowInvoice] = useState<Invoice | null>(null);
+  const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Invoice | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
 
-  const saleInvoices = invoices.filter((i) => i.type === "sale");
+  const saleInvoices = invoices.filter((i) => i.type === "sale").slice().reverse();
 
   const handlePrint = () => {
     const content = invoiceRef.current;
@@ -54,12 +57,18 @@ const Sales = () => {
     }
   };
 
+  const handleDelete = (inv: Invoice) => {
+    deleteInvoice(inv.id);
+    toast.success(`Invoice ${inv.invoiceNumber} deleted`);
+    setConfirmDelete(null);
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-heading font-bold text-foreground">Sales</h1>
-          <p className="text-sm text-muted-foreground mt-1">View all your saved sales invoices</p>
+          <p className="text-sm text-muted-foreground mt-1">View and manage your saved sales invoices</p>
         </div>
 
         <div className="bg-card rounded-xl p-5 card-shadow">
@@ -82,10 +91,16 @@ const Sales = () => {
                       {inv.partyName} • {inv.date}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <p className="text-sm font-semibold">₹{inv.totalAmount.toLocaleString("en-IN")}</p>
-                    <Button variant="ghost" size="icon" onClick={() => setShowInvoice(inv)}>
+                  <div className="flex items-center gap-1">
+                    <p className="text-sm font-semibold mr-2">₹{inv.totalAmount.toLocaleString("en-IN")}</p>
+                    <Button variant="ghost" size="icon" title="View" onClick={() => setShowInvoice(inv)}>
                       <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" title="Edit" onClick={() => setEditInvoice(inv)}>
+                      <Pencil className="h-4 w-4 text-blue-500" />
+                    </Button>
+                    <Button variant="ghost" size="icon" title="Delete" onClick={() => setConfirmDelete(inv)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                 </div>
@@ -94,6 +109,7 @@ const Sales = () => {
           )}
         </div>
 
+        {/* View Invoice Dialog */}
         <Dialog open={!!showInvoice} onOpenChange={() => setShowInvoice(null)}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
             <DialogHeader>
@@ -110,6 +126,31 @@ const Sales = () => {
               </DialogTitle>
             </DialogHeader>
             {showInvoice && <InvoiceTemplate ref={invoiceRef} invoice={showInvoice} shopInfo={shopInfo} />}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Invoice Dialog */}
+        <SaleFormDialog
+          open={!!editInvoice}
+          onClose={() => setEditInvoice(null)}
+          editInvoice={editInvoice}
+        />
+
+        {/* Confirm Delete Dialog */}
+        <Dialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Delete Invoice</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete <span className="font-semibold text-foreground">{confirmDelete?.invoiceNumber}</span>? This cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+              <Button variant="destructive" onClick={() => confirmDelete && handleDelete(confirmDelete)}>
+                Delete
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
