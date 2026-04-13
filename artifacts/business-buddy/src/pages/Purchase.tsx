@@ -1,18 +1,16 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Layout from "@/components/Layout";
 import { useCurrentStore as useStore } from "@/store/useCurrentStore";
 import { Invoice } from "@/types";
-import { PurchaseFormDialog } from "@/components/PurchaseFormDialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ShoppingBag, Plus, Eye, Trash2, Search, TrendingDown, Package } from "lucide-react";
+import { ShoppingBag, Eye, Trash2, Search, TrendingDown, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 const Purchase = () => {
   const { invoices, deleteInvoice } = useStore();
-  const [showAdd, setShowAdd] = useState(false);
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Invoice | null>(null);
   const [search, setSearch] = useState("");
@@ -39,14 +37,9 @@ const Purchase = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-heading font-bold text-foreground">Purchase</h1>
-            <p className="text-sm text-muted-foreground mt-1">Track your stock purchases from suppliers</p>
-          </div>
-          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setShowAdd(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Add Purchase
-          </Button>
+        <div>
+          <h1 className="text-2xl font-heading font-bold text-foreground">Purchase</h1>
+          <p className="text-sm text-muted-foreground mt-1">Track your stock purchases from suppliers</p>
         </div>
 
         {/* Stats */}
@@ -123,8 +116,7 @@ const Purchase = () => {
           )}
         </div>
 
-        {/* Add Purchase Dialog */}
-        <PurchaseFormDialog open={showAdd} onClose={() => setShowAdd(false)} />
+
 
         {/* View Detail Dialog */}
         <Dialog open={!!viewInvoice} onOpenChange={() => setViewInvoice(null)}>

@@ -338,7 +338,7 @@ export function PurchaseFormDialog({ open, onClose }: Props) {
                           <SelectTrigger className="text-xs h-9">
                             <SelectValue placeholder="Category" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="max-h-56 overflow-y-auto">
                             {ITEM_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                           </SelectContent>
                         </Select>
