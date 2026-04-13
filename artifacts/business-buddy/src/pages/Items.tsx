@@ -7,23 +7,52 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Trash2, Edit, Package, AlertTriangle, IndianRupee, Boxes, TrendingUp, Minus } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Package, AlertTriangle, IndianRupee, Boxes, TrendingUp, Minus, Tag, LayoutGrid } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { ITEM_CATEGORIES } from "@/lib/constants";
 
 const UNITS = ["Pcs", "Kg", "Gm", "Ltr", "Ml", "Mtr", "Ft", "Box", "Dozen", "Set", "Pair", "Roll"];
 
-const emptyForm = () => ({ name: "", price: "", gstPercent: "18", stock: "", unit: "Pcs", hsn: "" });
+const emptyForm = () => ({ name: "", category: "", price: "", gstPercent: "18", stock: "", unit: "Pcs", hsn: "" });
+
+const CATEGORY_COLORS: Record<string, string> = {
+  "Mobile / Phone": "bg-blue-100 text-blue-700",
+  "TV": "bg-purple-100 text-purple-700",
+  "Refrigerator": "bg-cyan-100 text-cyan-700",
+  "AC": "bg-sky-100 text-sky-700",
+  "Laptop": "bg-indigo-100 text-indigo-700",
+  "Tablet": "bg-violet-100 text-violet-700",
+  "Washing Machine": "bg-teal-100 text-teal-700",
+  "Headphones / Earbuds": "bg-pink-100 text-pink-700",
+  "Cables & Chargers": "bg-orange-100 text-orange-700",
+  "Screen Protector": "bg-amber-100 text-amber-700",
+  "Cover / Case": "bg-rose-100 text-rose-700",
+  "SIM / Recharge": "bg-lime-100 text-lime-700",
+  "CCTV / Security": "bg-slate-100 text-slate-700",
+  "Printer": "bg-gray-100 text-gray-700",
+  "UPS / Inverter": "bg-yellow-100 text-yellow-700",
+  "Accessories": "bg-fuchsia-100 text-fuchsia-700",
+  "Other": "bg-neutral-100 text-neutral-700",
+};
 
 const Items = () => {
   const { items, addItem, updateItem, deleteItem } = useStore();
   const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
   const [open, setOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [form, setForm] = useState(emptyForm());
   const [stockAdjust, setStockAdjust] = useState<{ item: Item; qty: string; mode: "add" | "reduce" } | null>(null);
 
-  const filtered = items.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
+  // Unique categories present in stock
+  const usedCategories = ["All", ...Array.from(new Set(items.map(i => i.category || "Other").filter(Boolean)))];
+
+  const filtered = items.filter(i => {
+    const matchSearch = i.name.toLowerCase().includes(search.toLowerCase());
+    const matchCat = activeCategory === "All" || (i.category || "Other") === activeCategory;
+    return matchSearch && matchCat;
+  });
 
   const totalProducts = items.length;
   const totalStockValue = items.reduce((s, i) => s + i.price * i.stock, 0);
@@ -34,6 +63,7 @@ const Items = () => {
     if (!form.name || !form.price) { toast.error("Name and price are required"); return; }
     const data = {
       name: form.name,
+      category: form.category || undefined,
       price: Number(form.price),
       gstPercent: Number(form.gstPercent),
       stock: Number(form.stock) || 0,
@@ -54,7 +84,15 @@ const Items = () => {
 
   const handleEdit = (item: Item) => {
     setEditingItem(item);
-    setForm({ name: item.name, price: String(item.price), gstPercent: String(item.gstPercent), stock: String(item.stock), unit: item.unit, hsn: item.hsn || "" });
+    setForm({
+      name: item.name,
+      category: item.category || "",
+      price: String(item.price),
+      gstPercent: String(item.gstPercent),
+      stock: String(item.stock),
+      unit: item.unit,
+      hsn: item.hsn || "",
+    });
     setOpen(true);
   };
 
@@ -71,9 +109,9 @@ const Items = () => {
   };
 
   const stockStatus = (stock: number) => {
-    if (stock === 0) return { label: "Out of Stock", cls: "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400" };
-    if (stock <= 5) return { label: "Low Stock", cls: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400" };
-    return { label: "In Stock", cls: "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400" };
+    if (stock === 0) return { label: "Out of Stock", cls: "bg-red-100 text-red-700" };
+    if (stock <= 5) return { label: "Low Stock", cls: "bg-amber-100 text-amber-700" };
+    return { label: "In Stock", cls: "bg-green-100 text-green-700" };
   };
 
   return (
@@ -89,12 +127,13 @@ const Items = () => {
           </Button>
         </div>
 
+        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { icon: Package, label: "Total Products", value: totalProducts, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30" },
-            { icon: Boxes, label: "Total Units", value: totalUnits.toLocaleString('en-IN'), color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/30" },
-            { icon: IndianRupee, label: "Stock Value", value: `₹${totalStockValue.toLocaleString('en-IN')}`, color: "text-green-600", bg: "bg-green-50 dark:bg-green-950/30" },
-            { icon: AlertTriangle, label: "Low / Out of Stock", value: lowStockItems, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/30" },
+            { icon: Package, label: "Total Products", value: totalProducts, color: "text-blue-600", bg: "bg-blue-50" },
+            { icon: Boxes, label: "Total Units", value: totalUnits.toLocaleString('en-IN'), color: "text-violet-600", bg: "bg-violet-50" },
+            { icon: IndianRupee, label: "Stock Value", value: `₹${totalStockValue.toLocaleString('en-IN')}`, color: "text-green-600", bg: "bg-green-50" },
+            { icon: AlertTriangle, label: "Low / Out of Stock", value: lowStockItems, color: "text-amber-600", bg: "bg-amber-50" },
           ].map((card, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
               className="bg-card rounded-xl p-4 card-shadow flex items-center gap-3">
@@ -109,23 +148,44 @@ const Items = () => {
           ))}
         </div>
 
+        {/* Category Filter */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {usedCategories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border ${
+                activeCategory === cat
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border hover:border-primary/50"
+              }`}
+            >
+              {cat === "All" ? <LayoutGrid className="h-3 w-3" /> : <Tag className="h-3 w-3" />}
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..." className="pl-9" />
         </div>
 
+        {/* Table */}
         <div className="bg-card rounded-xl card-shadow overflow-hidden">
           {filtered.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
               <Package className="h-12 w-12 mx-auto mb-3 opacity-25" />
               <p className="font-medium">No products found</p>
-              <p className="text-sm mt-1">Add your first product to get started</p>
+              <p className="text-sm mt-1">Add your first product or change the category filter</p>
             </div>
           ) : (
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-secondary/50">
                   <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase">Product</th>
+                  <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">Category</th>
                   <th className="text-right p-3 text-xs font-semibold text-muted-foreground uppercase">Price</th>
                   <th className="text-center p-3 text-xs font-semibold text-muted-foreground uppercase">GST</th>
                   <th className="text-center p-3 text-xs font-semibold text-muted-foreground uppercase">Stock</th>
@@ -137,6 +197,7 @@ const Items = () => {
               <tbody>
                 {filtered.map((item, i) => {
                   const status = stockStatus(item.stock);
+                  const catColor = CATEGORY_COLORS[item.category || ""] || "bg-gray-100 text-gray-600";
                   return (
                     <motion.tr key={item.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
                       className="border-b last:border-0 hover:bg-secondary/30 transition-colors">
@@ -148,18 +209,30 @@ const Items = () => {
                           <div>
                             <p className="text-sm font-semibold text-foreground">{item.name}</p>
                             {item.hsn && <p className="text-xs text-muted-foreground">HSN: {item.hsn}</p>}
+                            {item.category && (
+                              <span className={`inline-block text-xs font-medium px-1.5 py-0.5 rounded-full mt-0.5 md:hidden ${catColor}`}>
+                                {item.category}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
+                      <td className="p-3 hidden md:table-cell">
+                        {item.category ? (
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}>{item.category}</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
                       <td className="p-3 text-right text-sm font-bold text-foreground">₹{item.price.toLocaleString('en-IN')}</td>
                       <td className="p-3 text-center">
-                        <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">{item.gstPercent}%</span>
+                        <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">{item.gstPercent === 0 ? "Non-GST" : `${item.gstPercent}%`}</span>
                       </td>
                       <td className="p-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={() => setStockAdjust({ item, qty: "", mode: "reduce" })}
-                            className="h-5 w-5 rounded bg-red-100 hover:bg-red-200 dark:bg-red-950/40 flex items-center justify-center text-red-600 transition-colors"
+                            className="h-5 w-5 rounded bg-red-100 hover:bg-red-200 flex items-center justify-center text-red-600 transition-colors"
                             title="Reduce stock"
                           >
                             <Minus className="h-3 w-3" />
@@ -167,7 +240,7 @@ const Items = () => {
                           <span className="text-sm font-semibold min-w-[40px] text-center">{item.stock} <span className="text-xs text-muted-foreground font-normal">{item.unit}</span></span>
                           <button
                             onClick={() => setStockAdjust({ item, qty: "", mode: "add" })}
-                            className="h-5 w-5 rounded bg-green-100 hover:bg-green-200 dark:bg-green-950/40 flex items-center justify-center text-green-600 transition-colors"
+                            className="h-5 w-5 rounded bg-green-100 hover:bg-green-200 flex items-center justify-center text-green-600 transition-colors"
                             title="Add stock"
                           >
                             <Plus className="h-3 w-3" />
@@ -197,7 +270,8 @@ const Items = () => {
         </div>
       </div>
 
-      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingItem(null); setForm(emptyForm()); } }}>
+      {/* Add/Edit Dialog */}
+      <Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) { setEditingItem(null); setForm(emptyForm()); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -210,6 +284,17 @@ const Items = () => {
               <Label className="text-xs font-semibold uppercase text-muted-foreground mb-1.5 block">Product Name *</Label>
               <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Samsung Galaxy M14" />
             </div>
+            <div>
+              <Label className="text-xs font-semibold uppercase text-muted-foreground mb-1.5 block flex items-center gap-1">
+                <Tag className="h-3 w-3" /> Category
+              </Label>
+              <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>
+                  {ITEM_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-semibold uppercase text-muted-foreground mb-1.5 block">Price (₹) *</Label>
@@ -220,7 +305,7 @@ const Items = () => {
                 <Select value={form.gstPercent} onValueChange={v => setForm({ ...form, gstPercent: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {[0, 5, 12, 18, 28].map(g => <SelectItem key={g} value={String(g)}>{g}%</SelectItem>)}
+                    {[0, 5, 12, 18, 28].map(g => <SelectItem key={g} value={String(g)}>{g === 0 ? "Non-GST" : `${g}%`}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -252,7 +337,8 @@ const Items = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!stockAdjust} onOpenChange={(v) => { if (!v) setStockAdjust(null); }}>
+      {/* Stock Adjust Dialog */}
+      <Dialog open={!!stockAdjust} onOpenChange={v => { if (!v) setStockAdjust(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -275,19 +361,15 @@ const Items = () => {
                   Quantity to {stockAdjust.mode === "add" ? "Add" : "Reduce"}
                 </Label>
                 <Input
-                  type="number"
-                  min={1}
-                  value={stockAdjust.qty}
+                  type="number" min={1} value={stockAdjust.qty}
                   onChange={e => setStockAdjust(s => s ? { ...s, qty: e.target.value } : null)}
-                  placeholder="Enter quantity"
-                  autoFocus
+                  placeholder="Enter quantity" autoFocus
                   onKeyDown={e => { if (e.key === "Enter") handleStockAdjust(); }}
                 />
               </div>
               {stockAdjust.qty && Number(stockAdjust.qty) > 0 && (
                 <div className="text-sm text-muted-foreground bg-secondary/30 rounded-lg px-3 py-2">
-                  New Stock will be:{" "}
-                  <span className="font-bold text-foreground">
+                  New Stock: <span className="font-bold text-foreground">
                     {stockAdjust.mode === "add"
                       ? stockAdjust.item.stock + Number(stockAdjust.qty)
                       : Math.max(0, stockAdjust.item.stock - Number(stockAdjust.qty))

@@ -12,6 +12,7 @@ export interface Party {
 export interface Item {
   id: string;
   name: string;
+  category?: string;
   price: number;
   gstPercent: number;
   stock: number;

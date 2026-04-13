@@ -69,6 +69,8 @@ interface DataStore {
   updateItem: (userId: string, id: string, data: Partial<Item>) => void;
   deleteItem: (userId: string, id: string) => void;
   addInvoice: (userId: string, invoice: Invoice) => void;
+  updateInvoice: (userId: string, invoiceId: string, updates: Partial<Invoice>) => void;
+  deleteInvoice: (userId: string, invoiceId: string) => void;
   updateShopInfo: (userId: string, info: Partial<ShopInfo>) => void;
 }
 
@@ -163,12 +165,26 @@ export const useDataStore = create<DataStore>()(
         })),
 
       addInvoice: (userId, invoice) =>
-        set(s => ({
-          allData: {
-            ...s.allData,
-            [userId]: { ...s.allData[userId], invoices: [...(s.allData[userId]?.invoices || []), invoice] },
-          },
-        })),
+        set(s => {
+          const userData = s.allData[userId] || { parties: [], items: [], invoices: [], shopInfo: { ...defaultShopInfo } };
+          const updatedItems = userData.items.map(item => {
+            const invoiceItem = invoice.items.find(ii => ii.itemId === item.id || ii.name.trim().toLowerCase() === item.name.trim().toLowerCase());
+            if (!invoiceItem) return item;
+            if (invoice.type === 'purchase') return { ...item, stock: item.stock + invoiceItem.qty };
+            if (invoice.type === 'sale') return { ...item, stock: Math.max(0, item.stock - invoiceItem.qty) };
+            return item;
+          });
+          return {
+            allData: {
+              ...s.allData,
+              [userId]: {
+                ...userData,
+                items: updatedItems,
+                invoices: [...userData.invoices, invoice],
+              },
+            },
+          };
+        }),
 
       updateInvoice: (userId: string, invoiceId: string, updates: Partial<Invoice>) =>
         set(s => ({

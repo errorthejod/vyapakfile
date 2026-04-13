@@ -4,6 +4,7 @@ import Layout from "@/components/Layout";
 import { useCurrentStore } from "@/store/useCurrentStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { SaleFormDialog } from "@/components/SaleFormDialog";
+import { PurchaseFormDialog } from "@/components/PurchaseFormDialog";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -26,6 +27,7 @@ export default function Index() {
   const users = useAuthStore(s => s.users);
   const navigate = useNavigate();
   const [showSaleForm, setShowSaleForm] = useState(false);
+  const [showPurchaseForm, setShowPurchaseForm] = useState(false);
 
   const currentUser = users.find(u => u.id === currentUserId);
 
@@ -77,6 +79,7 @@ export default function Index() {
   return (
     <Layout>
       <SaleFormDialog open={showSaleForm} onClose={() => setShowSaleForm(false)} />
+      <PurchaseFormDialog open={showPurchaseForm} onClose={() => setShowPurchaseForm(false)} />
       <div className="flex flex-col h-full -m-4 md:-m-6">
         <div className="flex items-center justify-between px-5 py-3 border-b bg-white shrink-0">
           <div>
@@ -91,7 +94,7 @@ export default function Index() {
               + Add Sale
             </button>
             <button
-              onClick={() => navigate('/purchase')}
+              onClick={() => setShowPurchaseForm(true)}
               className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
             >
               + Add Purchase
