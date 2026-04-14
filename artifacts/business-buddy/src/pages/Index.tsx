@@ -43,29 +43,45 @@ export default function Index() {
   const payableParties = parties.filter(p => p.balance < 0).length;
 
   const saleInvoices = invoices.filter(i => i.type === 'sale');
-  const totalSale = saleInvoices.reduce((sum, i) => sum + i.totalAmount, 0);
+  const purchaseInvoices = invoices.filter(i => i.type === 'purchase');
 
   const lastMonthStart = new Date(year, month - 1, 1).toISOString().split('T')[0];
   const lastMonthEnd = new Date(year, month, 0).toISOString().split('T')[0];
   const thisMonthStart = new Date(year, month, 1).toISOString().split('T')[0];
 
-  const lastMonthSale = saleInvoices
-    .filter(i => i.date >= lastMonthStart && i.date <= lastMonthEnd)
-    .reduce((sum, i) => sum + i.totalAmount, 0);
   const thisMonthSale = saleInvoices
     .filter(i => i.date >= thisMonthStart)
     .reduce((sum, i) => sum + i.totalAmount, 0);
+  const lastMonthSale = saleInvoices
+    .filter(i => i.date >= lastMonthStart && i.date <= lastMonthEnd)
+    .reduce((sum, i) => sum + i.totalAmount, 0);
 
-  const pctChange = lastMonthSale > 0 ? ((thisMonthSale - lastMonthSale) / lastMonthSale) * 100 : 0;
+  const thisMonthPurchase = purchaseInvoices
+    .filter(i => i.date >= thisMonthStart)
+    .reduce((sum, i) => sum + i.totalAmount, 0);
+  const lastMonthPurchase = purchaseInvoices
+    .filter(i => i.date >= lastMonthStart && i.date <= lastMonthEnd)
+    .reduce((sum, i) => sum + i.totalAmount, 0);
+
+  const salePctChange = lastMonthSale > 0
+    ? ((thisMonthSale - lastMonthSale) / lastMonthSale) * 100
+    : thisMonthSale > 0 ? 100 : null;
+
+  const purchasePctChange = lastMonthPurchase > 0
+    ? ((thisMonthPurchase - lastMonthPurchase) / lastMonthPurchase) * 100
+    : thisMonthPurchase > 0 ? 100 : null;
 
   const dailyData = useMemo(() => {
     return Array.from({ length: daysInMonth }, (_, i) => {
       const day = i + 1;
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const dayTotal = saleInvoices
+      const sale = saleInvoices
         .filter(inv => inv.date === dateStr)
         .reduce((sum, inv) => sum + inv.totalAmount, 0);
-      return { day: String(day), amount: dayTotal };
+      const purchase = purchaseInvoices
+        .filter(inv => inv.date === dateStr)
+        .reduce((sum, inv) => sum + inv.totalAmount, 0);
+      return { day: String(day), sale, purchase };
     });
   }, [invoices, year, month, daysInMonth]);
 
@@ -131,23 +147,54 @@ export default function Index() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border shadow-sm">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Total Sale</p>
-                <p className="text-2xl font-bold text-foreground mt-0.5">{formatFull(totalSale)}</p>
-                {pctChange !== 0 && (
-                  <div className={cn("flex items-center gap-1 text-xs mt-1 font-medium", pctChange > 0 ? "text-emerald-600" : "text-red-500")}>
-                    {pctChange > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    <span>{Math.abs(pctChange).toFixed(0)}% {pctChange > 0 ? 'more' : 'less'} than last month</span>
-                  </div>
-                )}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white rounded-xl p-4 border shadow-sm">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs text-muted-foreground font-medium">Sale ({monthName})</p>
+                <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                  <FileText className="h-3.5 w-3.5 text-blue-600" />
+                </div>
               </div>
-              <span className="text-xs bg-blue-50 border border-blue-200 text-blue-700 font-medium px-2.5 py-1 rounded-lg">
-                {monthName}
-              </span>
+              <p className="text-xl font-bold text-foreground">{formatFull(thisMonthSale)}</p>
+              {salePctChange !== null && (
+                <div className={cn("flex items-center gap-1 text-xs mt-1 font-medium", salePctChange >= 0 ? "text-emerald-600" : "text-red-500")}>
+                  {salePctChange >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                  <span>{Math.abs(salePctChange).toFixed(0)}% {salePctChange >= 0 ? 'more' : 'less'} than last month</span>
+                </div>
+              )}
+              {salePctChange === null && (
+                <p className="text-xs text-muted-foreground mt-1">No data last month</p>
+              )}
             </div>
 
+            <div className="bg-white rounded-xl p-4 border shadow-sm">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs text-muted-foreground font-medium">Purchase ({monthName})</p>
+                <div className="h-7 w-7 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                  <ShoppingCart className="h-3.5 w-3.5 text-emerald-600" />
+                </div>
+              </div>
+              <p className="text-xl font-bold text-foreground">{formatFull(thisMonthPurchase)}</p>
+              {purchasePctChange !== null && (
+                <div className={cn("flex items-center gap-1 text-xs mt-1 font-medium", purchasePctChange >= 0 ? "text-emerald-600" : "text-red-500")}>
+                  {purchasePctChange >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                  <span>{Math.abs(purchasePctChange).toFixed(0)}% {purchasePctChange >= 0 ? 'more' : 'less'} than last month</span>
+                </div>
+              )}
+              {purchasePctChange === null && (
+                <p className="text-xs text-muted-foreground mt-1">No data last month</p>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-foreground">Sales vs Purchases — {monthName}</p>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-500"></span> Sale</span>
+                <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Purchase</span>
+              </div>
+            </div>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={dailyData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
@@ -156,24 +203,21 @@ export default function Index() {
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
+                    <linearGradient id="purchaseGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                   <XAxis dataKey="day" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} interval={4} />
                   <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={formatINR} />
                   <Tooltip
-                    formatter={(value: number) => [formatFull(value), 'Sales']}
+                    formatter={(value: number, name: string) => [formatFull(value), name === 'sale' ? 'Sale' : 'Purchase']}
                     labelFormatter={(label) => `Day ${label}`}
                     contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '11px' }}
                   />
-                  <Area
-                    type="monotone"
-                    dataKey="amount"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    fill="url(#saleGrad)"
-                    dot={false}
-                    activeDot={{ r: 3, fill: '#3b82f6' }}
-                  />
+                  <Area type="monotone" dataKey="sale" stroke="#3b82f6" strokeWidth={2} fill="url(#saleGrad)" dot={false} activeDot={{ r: 3, fill: '#3b82f6' }} />
+                  <Area type="monotone" dataKey="purchase" stroke="#10b981" strokeWidth={2} fill="url(#purchaseGrad)" dot={false} activeDot={{ r: 3, fill: '#10b981' }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
