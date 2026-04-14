@@ -95,10 +95,18 @@ const emptyItem = (): PurchaseItem => ({
   itemId: "", name: "", qty: 1, rate: 0, gstPercent: 18, amount: 0, cgst: 0, sgst: 0, category: "", hsn: "",
 });
 
-const calcItem = (item: PurchaseItem): PurchaseItem => {
+const calcFromRate = (item: PurchaseItem): PurchaseItem => {
   const base = item.qty * item.rate;
   const gst = (base * item.gstPercent) / 100;
   return { ...item, amount: base + gst, cgst: gst / 2, sgst: gst / 2 };
+};
+
+const calcFromAmount = (item: PurchaseItem): PurchaseItem => {
+  const divisor = 1 + item.gstPercent / 100;
+  const base = divisor > 0 ? item.amount / divisor : item.amount;
+  const gst = item.amount - base;
+  const rate = item.qty > 0 ? base / item.qty : 0;
+  return { ...item, rate, cgst: gst / 2, sgst: gst / 2 };
 };
 
 interface Props {
@@ -137,10 +145,11 @@ export function PurchaseFormDialog({ open, onClose }: Props) {
   const totalAmount = form.purchaseItems.reduce((s, i) => s + i.amount, 0);
   const subtotal = totalAmount - totalCgst - totalSgst;
 
-  const updateRow = (index: number, updates: Partial<PurchaseItem>) => {
+  const updateRow = (index: number, updates: Partial<PurchaseItem>, fromAmount = false) => {
     setForm(prev => {
       const rows = [...prev.purchaseItems];
-      rows[index] = calcItem({ ...rows[index], ...updates });
+      const merged = { ...rows[index], ...updates };
+      rows[index] = fromAmount ? calcFromAmount(merged) : calcFromRate(merged);
       return { ...prev, purchaseItems: rows };
     });
   };
@@ -359,16 +368,22 @@ export function PurchaseFormDialog({ open, onClose }: Props) {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="col-span-2 text-right text-sm font-semibold pr-1">
-                        ₹{row.amount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
-                      </div>
-                      <div className="col-span-1 flex justify-center">
+                      <div className="col-span-2 flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min={0}
+                          value={row.amount === 0 ? "" : row.amount}
+                          onChange={e => updateRow(i, { amount: Number(e.target.value) }, true)}
+                          className="text-right text-sm h-9 font-semibold px-2"
+                          placeholder="0"
+                        />
                         {form.purchaseItems.length > 1 && (
-                          <button onClick={() => removeRow(i)} className="text-red-400 hover:text-red-600 transition-colors">
+                          <button onClick={() => removeRow(i)} className="text-red-400 hover:text-red-600 transition-colors shrink-0">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         )}
                       </div>
+                      <div className="col-span-1"></div>
                     </div>
                   ))}
 
