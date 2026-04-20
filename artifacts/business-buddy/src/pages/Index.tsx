@@ -8,8 +8,7 @@ import { PurchaseFormDialog } from "@/components/PurchaseFormDialog";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { ArrowUp, ArrowDown, ShoppingCart, FileText, BookOpen, Users, ChevronRight, TrendingDown, TrendingUp, ReceiptText } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowUp, ArrowDown, ShoppingCart, FileText, BookOpen, Users, ChevronRight, ReceiptText } from "lucide-react";
 
 function formatFull(val: number) {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
@@ -45,31 +44,15 @@ export default function Index() {
   const saleInvoices = invoices.filter(i => i.type === 'sale');
   const purchaseInvoices = invoices.filter(i => i.type === 'purchase');
 
-  const lastMonthStart = new Date(year, month - 1, 1).toISOString().split('T')[0];
-  const lastMonthEnd = new Date(year, month, 0).toISOString().split('T')[0];
   const thisMonthStart = new Date(year, month, 1).toISOString().split('T')[0];
 
   const thisMonthSale = saleInvoices
     .filter(i => i.date >= thisMonthStart)
     .reduce((sum, i) => sum + i.totalAmount, 0);
-  const lastMonthSale = saleInvoices
-    .filter(i => i.date >= lastMonthStart && i.date <= lastMonthEnd)
-    .reduce((sum, i) => sum + i.totalAmount, 0);
 
   const thisMonthPurchase = purchaseInvoices
     .filter(i => i.date >= thisMonthStart)
     .reduce((sum, i) => sum + i.totalAmount, 0);
-  const lastMonthPurchase = purchaseInvoices
-    .filter(i => i.date >= lastMonthStart && i.date <= lastMonthEnd)
-    .reduce((sum, i) => sum + i.totalAmount, 0);
-
-  const salePctChange = lastMonthSale > 0
-    ? ((thisMonthSale - lastMonthSale) / lastMonthSale) * 100
-    : thisMonthSale > 0 ? 100 : null;
-
-  const purchasePctChange = lastMonthPurchase > 0
-    ? ((thisMonthPurchase - lastMonthPurchase) / lastMonthPurchase) * 100
-    : thisMonthPurchase > 0 ? 100 : null;
 
   const dailyData = useMemo(() => {
     return Array.from({ length: daysInMonth }, (_, i) => {
@@ -156,15 +139,6 @@ export default function Index() {
                 </div>
               </div>
               <p className="text-xl font-bold text-foreground">{formatFull(thisMonthSale)}</p>
-              {salePctChange !== null && (
-                <div className={cn("flex items-center gap-1 text-xs mt-1 font-medium", salePctChange >= 0 ? "text-emerald-600" : "text-red-500")}>
-                  {salePctChange >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                  <span>{Math.abs(salePctChange).toFixed(0)}% {salePctChange >= 0 ? 'more' : 'less'} than last month</span>
-                </div>
-              )}
-              {salePctChange === null && (
-                <p className="text-xs text-muted-foreground mt-1">No data last month</p>
-              )}
             </div>
 
             <div className="bg-white rounded-xl p-4 border shadow-sm">
@@ -175,15 +149,6 @@ export default function Index() {
                 </div>
               </div>
               <p className="text-xl font-bold text-foreground">{formatFull(thisMonthPurchase)}</p>
-              {purchasePctChange !== null && (
-                <div className={cn("flex items-center gap-1 text-xs mt-1 font-medium", purchasePctChange >= 0 ? "text-emerald-600" : "text-red-500")}>
-                  {purchasePctChange >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                  <span>{Math.abs(purchasePctChange).toFixed(0)}% {purchasePctChange >= 0 ? 'more' : 'less'} than last month</span>
-                </div>
-              )}
-              {purchasePctChange === null && (
-                <p className="text-xs text-muted-foreground mt-1">No data last month</p>
-              )}
             </div>
           </div>
 
