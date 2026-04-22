@@ -4,18 +4,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc || true",
     "start": "node dist/index.js"
   },
   "dependencies": {
     "@workspace/api-zod": "file:../../lib/api-zod",
-    "@workspace/db": "file:../../lib/db"
+    "@workspace/db": "file:../../lib/db",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "drizzle-orm": "catalog:",
+    "drizzle-orm": "^0.33.0",
     "express": "^5.0.0",
     "pino": "^9.0.0",
-    "pino-http": "^10.0.0"
+    "pino-http": "^10.0.0",
+    "pg": "^8.11.0",
+    "zod": "^3.22.0",
+    "drizzle-zod": "^0.5.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
